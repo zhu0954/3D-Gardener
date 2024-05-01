@@ -35,73 +35,337 @@
 		<script type="importmap">
 			{
 				"imports": {
-					"three": "./three.module.js"
+					"three": "./build/three.module.js"
 				}
 			}
 		</script>
 		
 	<script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from './jsm/controls/OrbitControls.js';
+    import { GUI } from './build/dat.gui.module.js';
+    import { MTLLoader } from './jsm/loaders/MTLLoader.js';
+    import { OBJLoader } from './jsm/loaders/OBJLoader.js';
+    import { GLTFLoader } from './jsm/loaders/GLTFLoader.js';
 
-  import * as THREE from 'three';
-	import { OrbitControls } from './controls/OrbitControls.js';
-  // import { GUI } from "https://cdn.skypack.dev/dat.gui";
-
+    //create the scene
     var scene = new THREE.Scene( );
     var ratio = window.innerWidth/window.innerHeight;
+    //create the perspective camera
     var camera = new THREE.PerspectiveCamera(45,ratio,0.1,1000);
-
+    //set the camera position
     camera.position.set(0,3,30);
+    // and the direction
 	  camera.lookAt(0,0,1);
-
+    //create the webgl renderer
     var renderer = new THREE.WebGLRenderer( );
+    //set the size of the rendering window
     renderer.setSize(window.innerWidth,window.innerHeight);
+    //add the renderer to the current document
     document.body.appendChild(renderer.domElement );
+
+    //GUI
+    const gui = new GUI();
+    const gltfLoader = new GLTFLoader();
     
-    function CreateScene()
-    {    
-      const cube_geo = new THREE.BoxGeometry(1,5,10);
-      const cube_mat = new THREE.MeshBasicMaterial();
-      cube_mat.color = new THREE.Color("rgb(250, 0, 100)");
-      cube_mat.wireframe = true;
-      const cube = new THREE.Mesh(cube_geo, cube_mat);
-      scene.add(cube);
-      
-      var ambientLight = new THREE.AmbientLight(new THREE.Color(1,1,1), 0.2);
-      scene.add(ambientLight);
+    //CONTROLS
+    var controls = new OrbitControls( camera, renderer.domElement );
+    var spotlightHelperVisible = true; 
+    //CLOCK
+    const clock = new THREE.Clock();
 
-      var cameraLight = new THREE.PointLight(new THREE.Color(1,1,1), 2);
-      camera.add(cameraLight);
-      scene.add(camera);
-    }
-
-  CreateScene();
-
-  var controls = new OrbitControls( camera, renderer.domElement );
-  const clock = new THREE.Clock();
-
-
-  var MyUpdateLoop = function ()
-  {
-    renderer.render(scene,camera);
-
-    controls.update();
+    var MyUpdateLoop = function ()
+    {
+      renderer.render(scene,camera);
+      controls.update();
+      requestAnimationFrame(MyUpdateLoop);
+    };
     requestAnimationFrame(MyUpdateLoop);
 
-  };
+    //this fucntion is called when the window is resized
+    var MyResize = function ( )
+    {
+      var width = window.innerWidth;
+      var height = window.innerHeight;
+      renderer.setSize(width,height);
+      camera.aspect = width/height;
+      camera.updateProjectionMatrix();
+      renderer.render(scene,camera);
+    };
+    window.addEventListener( 'resize', MyResize);
+    
+    //GUI
+    const options = 
+    {
+      addObject: 'Pot',
+      deleteMode: false,
+      showSpotlightHelper: true,
+      floorColor: '#aecd54',
+      spotlight: {
+      color: '#ffffff',
+      intensity: 0.5,
+      position: { x: 10, y: 40, z: 40 },
+      angle: Math.PI / 6,
+      penumbra: 1,
+      },
+    };
 
-  requestAnimationFrame(MyUpdateLoop);
+    // Function to add a pot
+    const addPot = (position) => 
+    {
+      const mtlLoader = new MTLLoader();
+      mtlLoader.setPath('models/Ceramic_pot_obj/');
+      mtlLoader.load('Ceramic_pot_model.mtl', function (materials) {
+        materials.preload();
+        const objLoader = new OBJLoader();
+        objLoader.setMaterials(materials);
+        objLoader.setPath('models/Ceramic_pot_obj/');
+        objLoader.load('Ceramic_pot_model.obj', function (object) 
+        {
+          object.traverse(function (child) {
+            if (child instanceof THREE.Mesh) {
+              // Set material properties
+              child.material.color = new THREE.Color(1, 1, 1);
+              child.material.shininess = 100;
+              child.castShadow = true; // Ensure pot casts shadow
+            }
+          });
+          const box3 = new THREE.Box3();
+          box3.setFromObject(object);
+          const centerBB = new THREE.Vector3();
+          const sizeBB = new THREE.Vector3();
+          box3.getCenter(centerBB);
+          box3.getSize(sizeBB);
+          // Set material color for all children
+          for (let i = 0; i < object.children.length; i++) {
+            object.children[i].material.color = new THREE.Color(1, 1, 1);
+          }
+          // Scale and translate the pot
+          const scaleMatrix = new THREE.Matrix4().makeScale(20 / sizeBB.length(), 20 / sizeBB.length(), 20 / sizeBB.length());
+          const translationMatrix = new THREE.Matrix4().makeTranslation(-centerBB.x, -centerBB.y, -centerBB.z);
+          const combinedMatrix = new THREE.Matrix4().multiplyMatrices(scaleMatrix, translationMatrix);
+          object.applyMatrix4(combinedMatrix);
+          
+          object.position.copy(position);
+          scene.add(object);
+        });
+      });
+    };
 
-  var MyResize = function ( )
-  {
-    var width = window.innerWidth;
-    var height = window.innerHeight;
-    renderer.setSize(width,height);
-    camera.aspect = width/height;
-    camera.updateProjectionMatrix();
-    renderer.render(scene,camera);
-  };
+    // Function to add a plant
+    const addPlant = (position) => 
+    {
+      const mtlLoader = new MTLLoader();
+      mtlLoader.setPath('models/Rose/');
+      mtlLoader.load('Rose.mtl', function (materials) {
+        materials.preload();
+        const objLoader = new OBJLoader();
+        objLoader.setMaterials(materials);
+        objLoader.setPath('models/Rose/');
+        objLoader.load('roseNew.obj', function (object) {
+          object.traverse(function (child) {
+            if (child instanceof THREE.Mesh) {
+              // Set material properties
+              child.material.color = new THREE.Color(1, 1, 1);
+              child.material.shininess = 100;
+              child.castShadow = true; 
+            }
+          });
+          const box3 = new THREE.Box3();
+          box3.setFromObject(object);
+          const centerBB = new THREE.Vector3();
+          const sizeBB = new THREE.Vector3();
+          box3.getCenter(centerBB);
+          box3.getSize(sizeBB);
+          // Set material color for all children
+          for (let i = 0; i < object.children.length; i++) {
+            object.children[i].material.color = new THREE.Color(1, 1, 1);
+          }
+          // Scale and translate the plant
+          const scaleMatrix = new THREE.Matrix4().makeScale(20 / sizeBB.length(), 20 / sizeBB.length(), 20 / sizeBB.length());
+          const translationMatrix = new THREE.Matrix4().makeTranslation(-centerBB.x, -centerBB.y, -centerBB.z);
+          const combinedMatrix = new THREE.Matrix4().multiplyMatrices(scaleMatrix, translationMatrix);
+          object.applyMatrix4(combinedMatrix);
 
-  window.addEventListener( 'resize', MyResize);
-    </script>
+
+          object.position.copy(position);
+          scene.add(object);
+        });
+      });
+    };
+
+    //RAYCASTER
+    var raycaster = new THREE.Raycaster();
+    
+    
+    document.addEventListener('mousedown', (event) =>
+    {
+      const mousePos = new THREE.Vector2();
+      mousePos.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mousePos.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(mousePos, camera);
+      if (!options.deleteMode) 
+      {
+        const intersections = raycaster.intersectObject(floor_mesh, true);
+        if (intersections.length > 0) 
+        {
+          const newPosition = intersections[0].point;
+          if (options.addObject === 'Pot') 
+          {
+            addPot(newPosition);
+          }
+          else if (options.addObject === 'Plant') 
+          {
+            addPlant(newPosition);
+          }
+        }
+      }
+    });
+
+    gui.add(options, 'addObject', ['Pot', 'Plant']).name('Add Object');
+    gui.add(options, 'deleteMode').name('Delete Mode');
+    gui.add(options, 'showSpotlightHelper').name('Show Spotlight Helper').onChange(() => {
+      toggleSpotlightHelper();
+    });
+    gui.addColor(options, 'floorColor').name('Floor Color').onChange(() => {
+      const floorColor = new THREE.Color(options.floorColor);
+      material_floor.color = floorColor;
+    });
+
+    // Create floor
+    var floor_mesh;
+    var material_floor; 
+    const createFloor = () => 
+    {
+      const normal_map = new THREE.TextureLoader().load('Models/Floor/wispy-grass-meadow_normal-ogl.png');
+      normal_map.wrapS = normal_map.wrapT = THREE.RepeatWrapping;
+      normal_map.repeat = new THREE.Vector2(1, 1);
+
+      material_floor = new THREE.MeshPhongMaterial({ 
+        shininess: 100,
+        side: THREE.DoubleSide,
+        color: new THREE.Color(options.floorColor),
+        normalMap: normal_map,
+      });
+
+      const geometry_floor = new THREE.PlaneGeometry(200, 200);
+      floor_mesh = new THREE.Mesh(geometry_floor, material_floor);
+      floor_mesh.rotation.x -= Math.PI / 2;
+      floor_mesh.position.y -= 10;
+      floor_mesh.receiveShadow = true;
+      scene.add(floor_mesh);
+    };
+    createFloor();
+
+    // Lighting
+    var cameralight = new THREE.PointLight(new THREE.Color(1, 1, 1), 0.5);
+    camera.add(cameralight);
+    scene.add(camera);
+
+    var ambientlight = new THREE.AmbientLight(new THREE.Color(1, 1, 1), 0.2);
+    scene.add(ambientlight);
+
+    // Spotlight
+    var spotlight = new THREE.SpotLight(new THREE.Color(1, 1, 1), 0.5);
+    spotlight.position.set(10, 40, 40);
+    spotlight.angle = Math.PI / 6;
+    spotlight.penumbra = 1;
+    spotlight.castShadow = true;
+    spotlight.shadow.mapSize.width = 2048;
+    spotlight.shadow.mapSize.height = 2048;
+    scene.add(spotlight);
+
+    //GUI
+    const spotlightControls = 
+    {
+      color: spotlight.color.getHex(),
+      intensity: spotlight.intensity,
+      position: spotlight.position,
+      angle: spotlight.angle,
+      penumbra: spotlight.penumbra
+    };
+
+    //GUI
+    const spotlightFolder = gui.addFolder('Spotlight');
+    spotlightFolder.addColor(spotlightControls, 'color').name('Color').onChange(() => {
+      spotlight.color.set(spotlightControls.color);
+    });
+    spotlightFolder.add(spotlightControls, 'intensity', 0, 1).name('Intensity').onChange(() => {
+      spotlight.intensity = spotlightControls.intensity;
+    });
+    spotlightFolder.add(spotlightControls.position, 'x', -50, 200).name('X Position').onChange(() => {
+      spotlight.position.x = spotlightControls.position.x;
+    });
+    spotlightFolder.add(spotlightControls.position, 'y', -50, 200).name('Y Position').onChange(() => {
+      spotlight.position.y = spotlightControls.position.y;
+    });
+    spotlightFolder.add(spotlightControls.position, 'z', -50, 200).name('Z Position').onChange(() => {
+      spotlight.position.z = spotlightControls.position.z;
+    });
+    spotlightFolder.add(spotlightControls, 'angle', 0, Math.PI).name('Angle').onChange(() => {
+      spotlight.angle = spotlightControls.angle;
+    });
+    spotlightFolder.add(spotlightControls, 'penumbra', 0, 2).name('Penumbra').onChange(() => {
+      spotlight.penumbra = spotlightControls.penumbra;
+    });
+
+    //GUI
+    const updateSpotlight = () => 
+    {
+      spotlight.color.set(options.spotlight.color);
+      spotlight.intensity = options.spotlight.intensity;
+      spotlight.position.set(options.spotlight.position.x, options.spotlight.position.y, options.spotlight.position.z);
+      spotlight.angle = options.spotlight.angle;
+      spotlight.penumbra = options.spotlight.penumbra;
+      spotLightHelper.update();
+    };
+
+    // Spotlight Helper
+    var spotLightHelper = new THREE.SpotLightHelper(spotlight);
+    scene.add(spotLightHelper);
+    
+    // Shadows
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    // Function to toggle spotlight helper visibility
+    const toggleSpotlightHelper = () => {
+      spotLightHelper.visible = options.showSpotlightHelper;
+    };
+    toggleSpotlightHelper();
+
+    // Raycaster
+    var raycaster = new THREE.Raycaster();
+    document.addEventListener('mousedown', (event) => {
+      const mousePos = new THREE.Vector2();
+      mousePos.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mousePos.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(mousePos, camera);
+
+      if (!options.deleteMode) {
+        const intersections = raycaster.intersectObject(floor_mesh, true);
+        if (intersections.length > 0) {
+          const newPosition = intersections[0].point;
+          if (options.addObject === 'Pot') {
+            addPot(newPosition);
+          } else if (options.addObject === 'Plant') {
+            addPlant(newPosition);
+          }
+        }
+      }
+    });
+
+    // Function to update floor color
+    const updateFloorColor = () => {
+      const floorColor = new THREE.Color(options.floorColor);
+      if (material_floor) { // Check if material_floor is defined
+        material_floor.color = floorColor;
+        material_floor.needsUpdate = true;
+      }
+    };
+    updateFloorColor();
+
+
+  </script>
   </body>
 </html>
