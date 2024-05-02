@@ -194,35 +194,15 @@
       });
     };
 
-    //RAYCASTER
-    var raycaster = new THREE.Raycaster();
-    
-    
-    document.addEventListener('mousedown', (event) =>
-    {
-      const mousePos = new THREE.Vector2();
-      mousePos.x = (event.clientX / window.innerWidth) * 2 - 1;
-      mousePos.y = -(event.clientY / window.innerHeight) * 2 + 1;
-      raycaster.setFromCamera(mousePos, camera);
-      if (!options.deleteMode) 
-      {
-        const intersections = raycaster.intersectObject(floor_mesh, true);
-        if (intersections.length > 0) 
-        {
-          const newPosition = intersections[0].point;
-          if (options.addObject === 'Pot') 
-          {
-            addPot(newPosition);
-          }
-          else if (options.addObject === 'Plant') 
-          {
-            addPlant(newPosition);
-          }
-        }
-      }
+    const addCactus = (position) => {
+    gltfLoader.load('./Models/cactus_1/scene.gltf', (gltf) => {
+        gltf.scene.position.copy(position);
+        scene.add(gltf.scene);
     });
-
-    gui.add(options, 'addObject', ['Pot', 'Plant']).name('Add Object');
+};
+    
+    
+    gui.add(options, 'addObject', ['Pot', 'Plant', 'Cactus']).name('Add Object');
     gui.add(options, 'deleteMode').name('Delete Mode');
     gui.add(options, 'showSpotlightHelper').name('Show Spotlight Helper').onChange(() => {
       toggleSpotlightHelper();
@@ -350,10 +330,13 @@
             addPot(newPosition);
           } else if (options.addObject === 'Plant') {
             addPlant(newPosition);
+          } else if (options.addObject === 'Cactus'){
+            addCactus(newPosition);
           }
         }
       }
     });
+    
 
     // Function to update floor color
     const updateFloorColor = () => {
