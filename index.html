@@ -195,14 +195,26 @@
     };
 
     const addCactus = (position) => {
-    gltfLoader.load('./Models/cactus_1/scene.gltf', (gltf) => {
+      gltfLoader.load('./Models/cactus_1/scene.gltf', (gltf) => {
+          gltf.scene.position.copy(position);
+          scene.add(gltf.scene);
+      });
+    };
+
+    const addSunflower = (position) => {
+      gltfLoader.load('./Models/sunflower/scene.gltf', (gltf) =>{
         gltf.scene.position.copy(position);
-        scene.add(gltf.scene);
-    });
-};
+
+        gltf.scene.rotation.y = THREE.MathUtils.degToRad(270);
+
+        gltf.scene.scale.set(0.1, 0.1, 0.1);
+
+        scene.add(gltf.scene)
+      })
+    }
     
     
-    gui.add(options, 'addObject', ['Pot', 'Plant', 'Cactus']).name('Add Object');
+    gui.add(options, 'addObject', ['Pot', 'Plant', 'Cactus', 'Sunflower']).name('Add Object');
     gui.add(options, 'deleteMode').name('Delete Mode');
     gui.add(options, 'showSpotlightHelper').name('Show Spotlight Helper').onChange(() => {
       toggleSpotlightHelper();
@@ -332,6 +344,8 @@
             addPlant(newPosition);
           } else if (options.addObject === 'Cactus'){
             addCactus(newPosition);
+          } else if (options.addObject === 'Sunflower'){
+            addSunflower(newPosition);
           }
         }
       }
