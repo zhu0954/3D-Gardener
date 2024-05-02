@@ -97,7 +97,7 @@
     //GUI
     const options = 
     {
-      addObject: 'Pot',
+      addObject: 'Sunflower',
       deleteMode: false,
       showSpotlightHelper: true,
       floorColor: '#aecd54',
@@ -110,90 +110,7 @@
       },
     };
 
-    // Function to add a pot
-    const addPot = (position) => 
-    {
-      const mtlLoader = new MTLLoader();
-      mtlLoader.setPath('models/Ceramic_pot_obj/');
-      mtlLoader.load('Ceramic_pot_model.mtl', function (materials) {
-        materials.preload();
-        const objLoader = new OBJLoader();
-        objLoader.setMaterials(materials);
-        objLoader.setPath('models/Ceramic_pot_obj/');
-        objLoader.load('Ceramic_pot_model.obj', function (object) 
-        {
-          object.traverse(function (child) {
-            if (child instanceof THREE.Mesh) {
-              // Set material properties
-              child.material.color = new THREE.Color(1, 1, 1);
-              child.material.shininess = 100;
-              child.castShadow = true; // Ensure pot casts shadow
-            }
-          });
-          const box3 = new THREE.Box3();
-          box3.setFromObject(object);
-          const centerBB = new THREE.Vector3();
-          const sizeBB = new THREE.Vector3();
-          box3.getCenter(centerBB);
-          box3.getSize(sizeBB);
-          // Set material color for all children
-          for (let i = 0; i < object.children.length; i++) {
-            object.children[i].material.color = new THREE.Color(1, 1, 1);
-          }
-          // Scale and translate the pot
-          const scaleMatrix = new THREE.Matrix4().makeScale(20 / sizeBB.length(), 20 / sizeBB.length(), 20 / sizeBB.length());
-          const translationMatrix = new THREE.Matrix4().makeTranslation(-centerBB.x, -centerBB.y, -centerBB.z);
-          const combinedMatrix = new THREE.Matrix4().multiplyMatrices(scaleMatrix, translationMatrix);
-          object.applyMatrix4(combinedMatrix);
-          
-          object.position.copy(position);
-          scene.add(object);
-        });
-      });
-    };
-
-    // Function to add a plant
-    const addPlant = (position) => 
-    {
-      const mtlLoader = new MTLLoader();
-      mtlLoader.setPath('models/Rose/');
-      mtlLoader.load('Rose.mtl', function (materials) {
-        materials.preload();
-        const objLoader = new OBJLoader();
-        objLoader.setMaterials(materials);
-        objLoader.setPath('models/Rose/');
-        objLoader.load('roseNew.obj', function (object) {
-          object.traverse(function (child) {
-            if (child instanceof THREE.Mesh) {
-              // Set material properties
-              child.material.color = new THREE.Color(1, 1, 1);
-              child.material.shininess = 100;
-              child.castShadow = true; 
-            }
-          });
-          const box3 = new THREE.Box3();
-          box3.setFromObject(object);
-          const centerBB = new THREE.Vector3();
-          const sizeBB = new THREE.Vector3();
-          box3.getCenter(centerBB);
-          box3.getSize(sizeBB);
-          // Set material color for all children
-          for (let i = 0; i < object.children.length; i++) {
-            object.children[i].material.color = new THREE.Color(1, 1, 1);
-          }
-          // Scale and translate the plant
-          const scaleMatrix = new THREE.Matrix4().makeScale(20 / sizeBB.length(), 20 / sizeBB.length(), 20 / sizeBB.length());
-          const translationMatrix = new THREE.Matrix4().makeTranslation(-centerBB.x, -centerBB.y, -centerBB.z);
-          const combinedMatrix = new THREE.Matrix4().multiplyMatrices(scaleMatrix, translationMatrix);
-          object.applyMatrix4(combinedMatrix);
-
-
-          object.position.copy(position);
-          scene.add(object);
-        });
-      });
-    };
-
+    //Function of cactus
     const addCactus = (position) => {
       gltfLoader.load('./Models/cactus_1/scene.gltf', (gltf) => {
           gltf.scene.position.copy(position);
@@ -201,6 +118,7 @@
       });
     };
 
+    //Creates Sunflower
     const addSunflower = (position) => {
       gltfLoader.load('./Models/sunflower/scene.gltf', (gltf) =>{
         gltf.scene.position.copy(position);
@@ -209,12 +127,48 @@
 
         gltf.scene.scale.set(0.1, 0.1, 0.1);
 
-        scene.add(gltf.scene)
+        scene.add(gltf.scene);
       })
     }
+
+    //Creates Zinnias
+    const addZinnias = (position)=> {
+      gltfLoader.load('./Models/Zinnias/scene.gltf', (gltf) =>{
+        gltf.scene.position.copy(position);
+        gltf.scene.position.y += 23
+
+        gltf.scene.scale.set(0.25, 0.25, 0.25);
+        scene.add(gltf.scene);
+      });
+    }
+
+    //Create lilies
+    const addLillies = (position)=> {
+      gltfLoader.load('./Models/purple_lilies/scene.gltf', (gltf) =>{
+        gltf.scene.position.copy(position);
+        gltf.scene.position.y += 8.25
+
+        scene.add(gltf.scene);
+      });
+    }
+
+    //Create Lungwort
+    const addLungwort = (position) => {
+      gltfLoader.load('./Models/Lungwort/scene.gltf', (gltf) =>{
+        gltf.scene.position.copy(position);
+        
+        gltf.scene.scale.set(20,20,20);
+
+        scene.add(gltf.scene);
+      });
+    }
+
+    
+
+
     
     
-    gui.add(options, 'addObject', ['Pot', 'Plant', 'Cactus', 'Sunflower']).name('Add Object');
+    gui.add(options, 'addObject', ['Sunflower', 'Cactus', 'Zinnias', 'Lillies','Lungwort']).name('Add Object');
     gui.add(options, 'deleteMode').name('Delete Mode');
     gui.add(options, 'showSpotlightHelper').name('Show Spotlight Helper').onChange(() => {
       toggleSpotlightHelper();
@@ -338,14 +292,16 @@
         const intersections = raycaster.intersectObject(floor_mesh, true);
         if (intersections.length > 0) {
           const newPosition = intersections[0].point;
-          if (options.addObject === 'Pot') {
-            addPot(newPosition);
-          } else if (options.addObject === 'Plant') {
-            addPlant(newPosition);
-          } else if (options.addObject === 'Cactus'){
+          if (options.addObject === 'Cactus') {
             addCactus(newPosition);
-          } else if (options.addObject === 'Sunflower'){
+          } else if (options.addObject === 'Sunflower') {
             addSunflower(newPosition);
+          } else if (options.addObject === 'Zinnias'){
+            addZinnias(newPosition);
+          } else if (options.addObject === 'Lillies'){
+            addLillies(newPosition);
+          } else if (options.addObject === 'Lungwort'){
+            addLungwort(newPosition);
           }
         }
       }

@@ -1,0 +1,425 @@
+{
+  "accessors": [
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 175,
+      "max": [
+        9.111166954040527,
+        28.181011199951172,
+        7.30767297744751
+      ],
+      "min": [
+        -5.4264678955078125,
+        -0.02106199972331524,
+        -1.7259249687194824
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 2100,
+      "componentType": 5126,
+      "count": 175,
+      "max": [
+        0.9956669807434082,
+        0.7487740516662598,
+        0.9955076575279236
+      ],
+      "min": [
+        -0.9955471158027649,
+        -0.9917317628860474,
+        -0.9986363649368286
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 175,
+      "max": [
+        0.9985389709472656,
+        -0.009999999776482582
+      ],
+      "min": [
+        0.0004879999905824661,
+        -0.9900000095367432
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "componentType": 5125,
+      "count": 720,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 4200,
+      "componentType": 5126,
+      "count": 360,
+      "max": [
+        9.783841133117676,
+        21.595693588256836,
+        9.547226905822754
+      ],
+      "min": [
+        -9.197237014770508,
+        -1.0524619817733765,
+        -6.17683219909668
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 8520,
+      "componentType": 5126,
+      "count": 360,
+      "max": [
+        0.6390110850334167,
+        -0.4410131871700287,
+        0.690969705581665
+      ],
+      "min": [
+        -0.7572692632675171,
+        -0.9454652667045593,
+        -0.7487264275550842
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 1400,
+      "componentType": 5126,
+      "count": 360,
+      "max": [
+        0.9985100030899048,
+        -0.0014900000533089042
+      ],
+      "min": [
+        0.0014900000533089042,
+        -0.9985100030899048
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "byteOffset": 2880,
+      "componentType": 5125,
+      "count": 360,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 12840,
+      "componentType": 5126,
+      "count": 315,
+      "max": [
+        13.447978973388672,
+        31.016820907592773,
+        10.888150215148926
+      ],
+      "min": [
+        -6.091774940490723,
+        16.079668045043945,
+        -1.497673749923706
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 16620,
+      "componentType": 5126,
+      "count": 315,
+      "max": [
+        0.9969611167907715,
+        0.9590563774108887,
+        0.9924670457839966
+      ],
+      "min": [
+        -0.41632452607154846,
+        -0.10132651776075363,
+        -0.4714954197406769
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 4280,
+      "componentType": 5126,
+      "count": 315,
+      "max": [
+        0.9955329895019531,
+        0.03621000051498413
+      ],
+      "min": [
+        -0.05000000074505806,
+        -1.0362099409103394
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "byteOffset": 4320,
+      "componentType": 5125,
+      "count": 315,
+      "type": "SCALAR"
+    }
+  ],
+  "asset": {
+    "extras": {
+      "author": "cailenlp (https://sketchfab.com/cailenlp)",
+      "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+      "source": "https://sketchfab.com/3d-models/32-zinnias-california-giant-4435a7120a29477f96cf2b74e78ef5d4",
+      "title": "32 Zinnias California Giant"
+    },
+    "generator": "Sketchfab-12.59.0",
+    "version": "2.0"
+  },
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 5580,
+      "name": "floatBufferViews",
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 6800,
+      "byteOffset": 5580,
+      "byteStride": 8,
+      "name": "floatBufferViews",
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 20400,
+      "byteOffset": 12380,
+      "byteStride": 12,
+      "name": "floatBufferViews",
+      "target": 34962
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 32780,
+      "uri": "scene.bin"
+    }
+  ],
+  "images": [
+    {
+      "uri": "textures/32_zinnias_californiagiant_leaves_baseColor.png"
+    },
+    {
+      "uri": "textures/32_zinnias_californiagiant_petals_baseColor.png"
+    }
+  ],
+  "materials": [
+    {
+      "doubleSided": true,
+      "name": "plant01",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.203922,
+          0.270588,
+          0.141176,
+          1.0
+        ],
+        "metallicFactor": 0.0,
+        "roughnessFactor": 0.6
+      }
+    },
+    {
+      "alphaMode": "BLEND",
+      "doubleSided": true,
+      "name": "32_zinnias_californiagiant_leaves",
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicFactor": 0.0,
+        "roughnessFactor": 0.6
+      }
+    },
+    {
+      "alphaMode": "BLEND",
+      "doubleSided": true,
+      "name": "32_zinnias_californiagiant_petals",
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 1
+        },
+        "metallicFactor": 0.0,
+        "roughnessFactor": 0.6
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Tree_2_plant01_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 1,
+            "POSITION": 0,
+            "TEXCOORD_0": 2
+          },
+          "indices": 3,
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Tree_2_32_zinnias_californiagiant_leaves_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 5,
+            "POSITION": 4,
+            "TEXCOORD_0": 6
+          },
+          "indices": 7,
+          "material": 1,
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Tree_2_32_zinnias_californiagiant_petals_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 9,
+            "POSITION": 8,
+            "TEXCOORD_0": 10
+          },
+          "indices": 11,
+          "material": 2,
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "children": [
+        1
+      ],
+      "matrix": [
+        0.9998565912246704,
+        2.962847539431158e-16,
+        -0.016934458166360855,
+        0.0,
+        0.016934458166360855,
+        -2.1901720660114848e-16,
+        0.9998565912246704,
+        0.0,
+        2.925333103669949e-16,
+        -1.0,
+        -2.2400322365215453e-16,
+        0.0,
+        -0.11876137554645538,
+        -89.89315032958984,
+        -14.024996757507344,
+        1.0
+      ],
+      "name": "Sketchfab_model"
+    },
+    {
+      "children": [
+        2
+      ],
+      "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        -1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        -1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "5c0b15aff79e4c56bc42e733ce1feecb.fbx"
+    },
+    {
+      "children": [
+        3
+      ],
+      "name": "RootNode"
+    },
+    {
+      "children": [
+        4,
+        5,
+        6
+      ],
+      "matrix": [
+        3.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        -4.887620514981705e-07,
+        2.9999999999999605,
+        0.0,
+        0.0,
+        -2.9999999999999605,
+        -4.887620514981705e-07,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "Tree_2"
+    },
+    {
+      "mesh": 0,
+      "name": "Tree_2_plant01_0"
+    },
+    {
+      "mesh": 1,
+      "name": "Tree_2_32_zinnias_californiagiant_leaves_0"
+    },
+    {
+      "mesh": 2,
+      "name": "Tree_2_32_zinnias_californiagiant_petals_0"
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987,
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "Sketchfab_Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "source": 0
+    },
+    {
+      "sampler": 0,
+      "source": 1
+    }
+  ]
+}
