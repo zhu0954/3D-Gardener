@@ -108,12 +108,29 @@
       angle: Math.PI / 6,
       penumbra: 1,
       },
+      sunFlowerColor: '#ffffff',
+      cactusColor: '#ffffff' ,
+      zinniasColor: '#ffffff',
+      lilliesColor: '#ffffff',
+      lungwortColor: '#ffffff'
     };
 
     //Function of cactus
     const addCactus = (position) => {
       gltfLoader.load('./Models/cactus_1/scene.gltf', (gltf) => {
-          gltf.scene.position.copy(position);
+        gltf.scene.position.copy(position);
+        gltf.scene.name = "Plant";
+
+        //shadows
+        gltf.scene.traverse((node) => 
+        {
+          if (node.isMesh)
+          {
+            node.castShadow = true;
+            node.material.color.set(options.cactusColor);
+          }
+        });
+        
           scene.add(gltf.scene);
       });
     };
@@ -122,10 +139,19 @@
     const addSunflower = (position) => {
       gltfLoader.load('./Models/sunflower/scene.gltf', (gltf) =>{
         gltf.scene.position.copy(position);
-
         gltf.scene.rotation.y = THREE.MathUtils.degToRad(270);
-
         gltf.scene.scale.set(0.1, 0.1, 0.1);
+        gltf.scene.name = "Plant";
+
+        //shadows
+        gltf.scene.traverse((node) => 
+        {
+          if (node.isMesh)
+          {
+            node.castShadow = true;
+            node.material.color.set(options.sunFlowerColor);
+          }
+        });
 
         scene.add(gltf.scene);
       })
@@ -136,8 +162,19 @@
       gltfLoader.load('./Models/Zinnias/scene.gltf', (gltf) =>{
         gltf.scene.position.copy(position);
         gltf.scene.position.y += 23
-
         gltf.scene.scale.set(0.25, 0.25, 0.25);
+        gltf.scene.name = "Plant";
+
+        //shadows
+        gltf.scene.traverse((node) => 
+        {
+          if (node.isMesh)
+          {
+            node.castShadow = true;
+            node.material.color.set(options.zinniasColor);
+          }
+        });
+
         scene.add(gltf.scene);
       });
     }
@@ -147,6 +184,17 @@
       gltfLoader.load('./Models/purple_lilies/scene.gltf', (gltf) =>{
         gltf.scene.position.copy(position);
         gltf.scene.position.y += 8.25
+        gltf.scene.name = "Plant";
+
+        //shadows
+        gltf.scene.traverse((node) => 
+        {
+          if (node.isMesh)
+          {
+            node.castShadow = true;
+            node.material.color.set(options.lilliesColor);
+          }
+        });
 
         scene.add(gltf.scene);
       });
@@ -156,8 +204,18 @@
     const addLungwort = (position) => {
       gltfLoader.load('./Models/Lungwort/scene.gltf', (gltf) =>{
         gltf.scene.position.copy(position);
-        
         gltf.scene.scale.set(20,20,20);
+        gltf.scene.name = "Plant";
+
+        //shadows
+        gltf.scene.traverse((node) => 
+        {
+          if (node.isMesh)
+          {
+            node.castShadow = true;
+            node.material.color.set(options.lungwortColor);
+          }
+        });
 
         scene.add(gltf.scene);
       });
@@ -169,7 +227,9 @@
     
     
     gui.add(options, 'addObject', ['Sunflower', 'Cactus', 'Zinnias', 'Lillies','Lungwort']).name('Add Object');
-    gui.add(options, 'deleteMode').name('Delete Mode');
+    gui.add(options, 'deleteMode').name('Delete Mode').onChange((enabled) =>{
+      console.log("Delete Mode: " + (enabled ? "Enabled" : "Disabled"));
+    })
     gui.add(options, 'showSpotlightHelper').name('Show Spotlight Helper').onChange(() => {
       toggleSpotlightHelper();
     });
@@ -177,6 +237,13 @@
       const floorColor = new THREE.Color(options.floorColor);
       material_floor.color = floorColor;
     });
+    const flowerColor = gui.addFolder('Plant Color');
+    // flowerColor.addColor(options, 'sunFlowerColor').name('Sunflower Color').onChange(addSunflower);
+    // flowerColor.addColor(options, 'cactusColor').name('Cactus Color').onChange(addCactus);
+    // flowerColor.addColor(options, 'lilliesColor').name('Lillies Color').onChange(addLillies);
+    // flowerColor.addColor(options, 'lungwortColor').name('Lungwort Color').onChange(addLungwort);
+    // flowerColor.addColor(options, 'zinniasColor').name('Zinnias Color').onChange(addZinnias);
+    
 
     // Create floor
     var floor_mesh;
@@ -199,6 +266,7 @@
       floor_mesh.rotation.x -= Math.PI / 2;
       floor_mesh.position.y -= 10;
       floor_mesh.receiveShadow = true;
+      floor_mesh.name = "Floor";
       scene.add(floor_mesh);
     };
     createFloor();
@@ -288,25 +356,59 @@
       mousePos.y = -(event.clientY / window.innerHeight) * 2 + 1;
       raycaster.setFromCamera(mousePos, camera);
 
-      if (!options.deleteMode) {
-        const intersections = raycaster.intersectObject(floor_mesh, true);
-        if (intersections.length > 0) {
-          const newPosition = intersections[0].point;
-          if (options.addObject === 'Cactus') {
-            addCactus(newPosition);
-          } else if (options.addObject === 'Sunflower') {
-            addSunflower(newPosition);
-          } else if (options.addObject === 'Zinnias'){
-            addZinnias(newPosition);
-          } else if (options.addObject === 'Lillies'){
-            addLillies(newPosition);
-          } else if (options.addObject === 'Lungwort'){
-            addLungwort(newPosition);
+      const intersects = raycaster.intersectObjects(scene.children, true);
+
+      if (intersects.length > 0) {
+        if (options.deleteMode) {
+          // Handle deletion
+          for (let intersect of intersects) {
+            let target = intersect.object;
+            // Traverse up to find a parent object that is a "Plant"
+            while (target.parent && target.parent !== scene) {
+              if (target.parent.name === "Plant") {
+                target = target.parent;
+                break;
+              }
+              target = target.parent;
+            }
+            // Check if we have marked this object or its parent as "Plant"
+            if (target.name === "Plant") {
+              scene.remove(target);
+              // Proper cleanup of resources
+              target.traverse(node => {
+                if (node.geometry) node.geometry.dispose();
+                if (node.material) node.material.dispose();
+              });
+              break; // Exit after deleting one plant to prevent multiple deletions per click
+            }
+          }
+        } else {
+          // Handle adding plants
+          const floorIntersect = intersects.find(intersect => intersect.object.name === "Floor");
+          if (floorIntersect) {
+            const newPosition = floorIntersect.point;
+            switch(options.addObject) {
+              case 'Cactus':
+                addCactus(newPosition);
+                break;
+              case 'Sunflower':
+                addSunflower(newPosition);
+                break;
+              case 'Zinnias':
+                addZinnias(newPosition);
+                break;
+              case 'Lillies':
+                addLillies(newPosition);
+                break;
+              case 'Lungwort':
+                addLungwort(newPosition);
+                break;
+            }
           }
         }
       }
     });
-    
+
 
     // Function to update floor color
     const updateFloorColor = () => {
