@@ -43,17 +43,16 @@
 	<script type="module">
 
   import * as THREE from 'three';
+  import * as WEATHER from './Weather.js';
 	import { OrbitControls } from './build/controls/OrbitControls.js';
   import { GUI } from './build/gui/lil-gui.module.min.js';
   import { OBJLoader } from './build/loaders/OBJLoader.js'
 
-    let scene, camera, renderer, controls, directionalLight, rain, rainMaterial, rainDrop, rainGeo, 
-    rainCount = 30000, posAttr, sunOn = false, rainOn = false;
-    const vertices = [];
-    const velocities = [];
+    let scene, camera, renderer, controls, directionalLight, rain, 
+    posAttr, cube, sun, sunOn = false, rainOn = false;
 
     const cubeColour = {
-      hex: "#FF00FF"
+      hex: "#00FFFF"
     }
 
     function init() {
@@ -66,65 +65,34 @@
       camera.position.set(0,3,30);
       camera.lookAt(0,0,1);
 
-      var cameraLight = new THREE.PointLight(new THREE.Color(1,1,1), 0.5);
+      var cameraLight = new THREE.PointLight(new THREE.Color(1,1,1), 0.8);
       camera.add(cameraLight);
-      scene.add(camera);
+      // scene.add(camera);
 
       directionalLight = new THREE.DirectionalLight(0xffeedd);
       directionalLight.position.set(0,0,1);
-      scene.add(directionalLight)
+      // scene.add(directionalLight)
 
       renderer = new THREE.WebGLRenderer( );
       renderer.setSize(window.innerWidth,window.innerHeight);
       document.body.appendChild(renderer.domElement );
       controls = new OrbitControls( camera, renderer.domElement );
 
-      rainGeo = new THREE.BufferGeometry();
-      for(let i=0;i<rainCount;i++) {
-        const x = Math.random() * 400 - 200;
-        const y = Math.random() * 400 - 200;
-        const z = Math.random() * 400 - 200;
-        vertices.push(x,y,z);
-        velocities.push(-0.5);
-      }
-      rainGeo.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-      posAttr = rainGeo.getAttribute('position');
-
-      rainMaterial = new THREE.PointsMaterial({
-        color: 0xaaaaaa,
-        size: 0.5,
-        transparent: true
-      });
-      rain = new THREE.Points(rainGeo,rainMaterial);
+      rain = WEATHER.createRain();
+      posAttr = WEATHER.getPositionAttributes();
       scene.add(rain);
 
       const cube_geo = new THREE.BoxGeometry(50,1,50);
-      const cube_mat = new THREE.MeshBasicMaterial();
+      const cube_mat = new THREE.MeshLambertMaterial();
       cube_mat.color = new THREE.Color(cubeColour.hex);
       cube_mat.wireframe = false;
-      const cube = new THREE.Mesh(cube_geo, cube_mat);
-      //scene.add(cube);
+      cube = new THREE.Mesh(cube_geo, cube_mat);
+      scene.add(cube);
 
-      const loader = new OBJLoader( );
-				//loader.setResourcePath( 'model/3ds/portalgun/textures/' );
-				loader.load( 'model/grass.obj', function ( object ) {
-				  object.traverse( function (obj) {
-            if (obj.isMesh){
-              obj.material.color.set(0xFFB6C1);
-           // MeshBasicMaterial.color = new THREE.Color(0xff00ff);
-					// // 	if ( child.isMesh ) {
-					// // 		child.material.specular.setScalar( 0.1 );
-					// // 	  child.material.normalMap = normal;
-						}
-					} );
-          object.
-					scene.add( object );
-				} );
-
-      let light = new THREE.AmbientLight(0xe5df25);
-      light.intensity = 1;
+      let light = new THREE.AmbientLight(0xffffff);
+      light.intensity = .5;
       light.position.set(0, 0, 10);
-      //scene.add(light);
+      scene.add(light);
 
       var defaultSun = new THREE.PointLight(new THREE.Color(0xffffff), 1);
       defaultSun.position.y=300;
@@ -133,97 +101,42 @@
       defaultSun.intensity = 1;
       //scene.add(defaultSun);
 
-      var extremeSun = new THREE.PointLight(new THREE.Color(0xffff00), 10);
-      extremeSun.position.y=300;
-      extremeSun.position.x=300;
-      extremeSun.position.z=300;
-      //scene.add(extremeSun);
+      // var extremeSun = new THREE.SpotLight(new THREE.Color(0xf9d71c), 1);
+      // var extremeSun = new THREE.SpotLight(new THREE.Color(0xf9d71c), 10);
+      // extremeSun.position.y=300;
+      // extremeSun.position.x=300;
+      // extremeSun.position.z=300;
+      // extremeSun.power = 10;
+      
+      sun = WEATHER.createSun();
+      scene.add(sun);
+      scene.add(sun.target);
 
       animate();
 
     }
 
+    function sunColourChange(on) {
+      if(on) {
+        cube.material.color = new THREE.Color(0xfc6c8d);
+      }
+      else {
+        cube.material.color = new THREE.Color(0xFF00FF);
+      }
+    }
 
     function animate() {
-      // console.log(posAttr.count)
+      sun.visible = sunOn;
+      // sunColourChange(sunOn);
       rain.visible = rainOn;
-      for ( let i=0; i<posAttr.count; i++ ) {
-
-        var y = posAttr.getY(i);  
-        // console.log(y)
-        var vel = velocities[i];
-
-        vel -= 0.0001 + Math.random() * 0.01;
-        vel -= 1/1000;
-        y += vel;
-        if (y < -200) {
-          y = 200;
-          vel = vel;
-        }
-        velocities[i] = vel;
-
-        posAttr.setY( i, y );
-
-      }
+      posAttr = WEATHER.animateRain();
       posAttr.needsUpdate = true;
-      // rain.rotation.y+=0.002;
       renderer.render(scene,camera);
       controls.update();
       requestAnimationFrame(animate);
 
     }
     init();
-    // var loader = new PLYLoader();
-    // var mesh = null;
-    // loader.load('model/grass.ply', function ( geometry )
-    // {
-    //       geometry.computeVertexNormals();
-    //       geometry.computeBoundingBox();
-          
-    //       var center = new THREE.Vector3();
-    //       var size = new THREE.Vector3();
-    //       geometry.boundingBox.getCenter(center);
-    //       geometry.boundingBox.getSize(size);
-    //       var min = geometry.boundingBox.min;
-
-    //       var sca = new THREE.Matrix4();
-    //       var tra = new THREE.Matrix4();
-
-    //       var ScaleFact=30/size.length();
-    //       sca.makeScale(ScaleFact,ScaleFact,ScaleFact);
-    //       tra.makeTranslation (-center.x,-center.y,-center.z);
-
-    //       var material = new THREE.MeshPhongMaterial();
-    //       material.color= new THREE.Color(0.9,0.9,0.9);
-    //       material.shininess=100;
-    //       mesh = new THREE.Mesh( geometry, material );
-
-    //       mesh.applyMatrix4(tra);
-    //       mesh.applyMatrix4(sca);
-
-    //       mesh.name = "loaded_mesh";
-
-    //       scene.add( mesh );
-    // } );
-    
-    function CreateScene()
-    {    
-      
-      
-      // var ambientLight = new THREE.AmbientLight(new THREE.Color(1,1,1), 0.2);
-      // scene.add(ambientLight);
-      // let light = new THREE.AmbientLight(0xe5df25);
-      // light.intensity = 1;
-      // light.position.set(0, 0, 1);
-      // scene.add(light);
-      // var cameraLight = new THREE.PointLight(new THREE.Color(0xece787), 0.1);
-      
-    }
-
- 
-
-
-
 
   var MyResize = function ( )
   {
@@ -245,7 +158,7 @@
 
     gui.add(weather, 'RainVar').name('Rain').onChange(value => {rainOn = value});
     gui.add(weather, 'SunVar', 0, 1).name('Sun').onChange(value => {sunOn = value});
-    gui.addColor(cubeColour, 'hex').name("Colour").onChange(value => cube_mat.color.value = new THREE.Color(value));
+    //gui.addColor(cubeColour, 'hex').name("Colour").onChange(value => cube_mat.color.value = new THREE.Color(value));
 
       
     </script>
