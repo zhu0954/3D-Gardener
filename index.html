@@ -42,59 +42,16 @@
 		
 	<script type="module">
     import * as THREE from 'three';
+    import * as WEATHER from './Weather.js';
     import { OrbitControls } from './jsm/controls/OrbitControls.js';
     import { GUI } from './build/dat.gui.module.js';
     import { MTLLoader } from './jsm/loaders/MTLLoader.js';
     import { OBJLoader } from './jsm/loaders/OBJLoader.js';
     import { GLTFLoader } from './jsm/loaders/GLTFLoader.js';
 
-    //create the scene
-    var scene = new THREE.Scene( );
-    var ratio = window.innerWidth/window.innerHeight;
-    //create the perspective camera
-    var camera = new THREE.PerspectiveCamera(45,ratio,0.1,1000);
-    //set the camera position
-    camera.position.set(0,3,30);
-    // and the direction
-	  camera.lookAt(0,0,1);
-    //create the webgl renderer
-    var renderer = new THREE.WebGLRenderer( );
-    //set the size of the rendering window
-    renderer.setSize(window.innerWidth,window.innerHeight);
-    //add the renderer to the current document
-    document.body.appendChild(renderer.domElement );
+    let scene, camera, renderer, controls, directionalLight, rain, spotlight,
+    posAttr, floorMesh, materialFloor, cube, sun, sunOn = false, rainOn = false;
 
-    //GUI
-    const gui = new GUI();
-    const gltfLoader = new GLTFLoader();
-    
-    //CONTROLS
-    var controls = new OrbitControls( camera, renderer.domElement );
-    var spotlightHelperVisible = true; 
-    //CLOCK
-    const clock = new THREE.Clock();
-
-    var MyUpdateLoop = function ()
-    {
-      renderer.render(scene,camera);
-      controls.update();
-      requestAnimationFrame(MyUpdateLoop);
-    };
-    requestAnimationFrame(MyUpdateLoop);
-
-    //this fucntion is called when the window is resized
-    var MyResize = function ( )
-    {
-      var width = window.innerWidth;
-      var height = window.innerHeight;
-      renderer.setSize(width,height);
-      camera.aspect = width/height;
-      camera.updateProjectionMatrix();
-      renderer.render(scene,camera);
-    };
-    window.addEventListener( 'resize', MyResize);
-    
-    //GUI
     const options = 
     {
       addObject: 'Sunflower',
@@ -115,6 +72,108 @@
       lungwortColor: '#ffffff'
     };
 
+    function init() {
+      scene = new THREE.Scene( );
+      var ratio = window.innerWidth/window.innerHeight;
+      camera = new THREE.PerspectiveCamera(45,ratio,0.1,1000);
+      sunOn = false;
+
+      camera.position.set(0,3,30);
+      camera.lookAt(0,0,1);
+
+      renderer = new THREE.WebGLRenderer( );
+      renderer.setSize(window.innerWidth,window.innerHeight);
+      document.body.appendChild(renderer.domElement );
+
+      //CONTROLS
+      controls = new OrbitControls( camera, renderer.domElement );
+      var spotlightHelperVisible = true; 
+      //CLOCK
+      const clock = new THREE.Clock();
+
+      rain = WEATHER.createRain();
+      posAttr = WEATHER.getPositionAttributes();
+      scene.add(rain);
+
+      sun = WEATHER.createSun();
+      scene.add(sun);
+      scene.add(sun.target);
+
+      // Lighting
+      var cameralight = new THREE.PointLight(new THREE.Color(1, 1, 1), 0.5);
+      camera.add(cameralight);
+      scene.add(camera);
+
+      var ambientlight = new THREE.AmbientLight(new THREE.Color(1, 1, 1), 0.2);
+      scene.add(ambientlight);
+
+      // Spotlight
+      spotlight = new THREE.SpotLight(new THREE.Color(1, 1, 1), 0.5);
+      spotlight.position.set(10, 40, 40);
+      spotlight.angle = Math.PI / 6;
+      spotlight.penumbra = 1;
+      spotlight.castShadow = true;
+      spotlight.shadow.mapSize.width = 2048;
+      spotlight.shadow.mapSize.height = 2048;
+      scene.add(spotlight);
+
+      // Create floor
+      const createFloor = () => 
+      {
+        const normal_map = new THREE.TextureLoader().load('Models/Floor/wispy-grass-meadow_normal-ogl.png');
+        normal_map.wrapS = normal_map.wrapT = THREE.RepeatWrapping;
+        normal_map.repeat = new THREE.Vector2(1, 1);
+
+        materialFloor = new THREE.MeshPhongMaterial({ 
+          shininess: 100,
+          side: THREE.DoubleSide,
+          color: new THREE.Color(options.floorColor),
+          normalMap: normal_map,
+        });
+
+        const geometryFloor = new THREE.PlaneGeometry(200, 200);
+        floorMesh = new THREE.Mesh(geometryFloor, materialFloor);
+        floorMesh.rotation.x -= Math.PI / 2;
+        floorMesh.position.y -= 10;
+        floorMesh.receiveShadow = true;
+        floorMesh.name = "Floor";
+        scene.add(floorMesh);
+      };
+      createFloor();
+
+      // Spotlight Helper
+      var spotLightHelper = new THREE.SpotLightHelper(spotlight);
+      scene.add(spotLightHelper);
+
+      // Function to toggle spotlight helper visibility
+      const toggleSpotlightHelper = () => {
+        spotLightHelper.visible = options.showSpotlightHelper;
+      };
+      toggleSpotlightHelper();
+      
+      // Shadows
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+      animate();
+
+    }
+    
+    function animate() {
+      sun.visible = sunOn;
+      // sunColourChange(sunOn);
+      rain.visible = rainOn;
+      posAttr = WEATHER.animateRain();
+      posAttr.needsUpdate = true;
+      renderer.render(scene,camera);
+      controls.update();
+      requestAnimationFrame(animate);
+    }
+
+    init();
+
+    const gltfLoader = new GLTFLoader()
+      
     //Function of cactus
     const addCactus = (position) => {
       gltfLoader.load('./Models/cactus_1/scene.gltf', (gltf) => {
@@ -221,75 +280,28 @@
       });
     }
 
-    
-
-
-    
-    
-    gui.add(options, 'addObject', ['Sunflower', 'Cactus', 'Zinnias', 'Lillies','Lungwort']).name('Add Object');
-    gui.add(options, 'deleteMode').name('Delete Mode').onChange((enabled) =>{
-      console.log("Delete Mode: " + (enabled ? "Enabled" : "Disabled"));
-    })
-    gui.add(options, 'showSpotlightHelper').name('Show Spotlight Helper').onChange(() => {
-      toggleSpotlightHelper();
-    });
-    gui.addColor(options, 'floorColor').name('Floor Color').onChange(() => {
-      const floorColor = new THREE.Color(options.floorColor);
-      material_floor.color = floorColor;
-    });
-    const flowerColor = gui.addFolder('Plant Color');
-    // flowerColor.addColor(options, 'sunFlowerColor').name('Sunflower Color').onChange(addSunflower);
-    // flowerColor.addColor(options, 'cactusColor').name('Cactus Color').onChange(addCactus);
-    // flowerColor.addColor(options, 'lilliesColor').name('Lillies Color').onChange(addLillies);
-    // flowerColor.addColor(options, 'lungwortColor').name('Lungwort Color').onChange(addLungwort);
-    // flowerColor.addColor(options, 'zinniasColor').name('Zinnias Color').onChange(addZinnias);
-    
-
-    // Create floor
-    var floor_mesh;
-    var material_floor; 
-    const createFloor = () => 
+    var MyResize = function ( )
     {
-      const normal_map = new THREE.TextureLoader().load('Models/Floor/wispy-grass-meadow_normal-ogl.png');
-      normal_map.wrapS = normal_map.wrapT = THREE.RepeatWrapping;
-      normal_map.repeat = new THREE.Vector2(1, 1);
-
-      material_floor = new THREE.MeshPhongMaterial({ 
-        shininess: 100,
-        side: THREE.DoubleSide,
-        color: new THREE.Color(options.floorColor),
-        normalMap: normal_map,
-      });
-
-      const geometry_floor = new THREE.PlaneGeometry(200, 200);
-      floor_mesh = new THREE.Mesh(geometry_floor, material_floor);
-      floor_mesh.rotation.x -= Math.PI / 2;
-      floor_mesh.position.y -= 10;
-      floor_mesh.receiveShadow = true;
-      floor_mesh.name = "Floor";
-      scene.add(floor_mesh);
+      var width = window.innerWidth;
+      var height = window.innerHeight;
+      renderer.setSize(width,height);
+      camera.aspect = width/height;
+      camera.updateProjectionMatrix();
+      renderer.render(scene,camera);
     };
-    createFloor();
 
-    // Lighting
-    var cameralight = new THREE.PointLight(new THREE.Color(1, 1, 1), 0.5);
-    camera.add(cameralight);
-    scene.add(camera);
+    window.addEventListener( 'resize', MyResize);
 
-    var ambientlight = new THREE.AmbientLight(new THREE.Color(1, 1, 1), 0.2);
-    scene.add(ambientlight);
-
-    // Spotlight
-    var spotlight = new THREE.SpotLight(new THREE.Color(1, 1, 1), 0.5);
-    spotlight.position.set(10, 40, 40);
-    spotlight.angle = Math.PI / 6;
-    spotlight.penumbra = 1;
-    spotlight.castShadow = true;
-    spotlight.shadow.mapSize.width = 2048;
-    spotlight.shadow.mapSize.height = 2048;
-    scene.add(spotlight);
-
+    const gui = new GUI();
+    
     //GUI
+    const weather = {
+        RainVar: false,
+        SunVar: false,
+    };
+
+    
+
     const spotlightControls = 
     {
       color: spotlight.color.getHex(),
@@ -299,7 +311,24 @@
       penumbra: spotlight.penumbra
     };
 
-    //GUI
+    gui.add(options, 'addObject', ['Sunflower', 'Cactus', 'Zinnias', 'Lillies','Lungwort']).name('Add Object');
+    gui.add(options, 'deleteMode').name('Delete Mode').onChange((enabled) =>{
+      console.log("Delete Mode: " + (enabled ? "Enabled" : "Disabled"));
+    })
+    gui.add(options, 'showSpotlightHelper').name('Show Spotlight Helper').onChange(() => {
+      toggleSpotlightHelper();
+    });
+    gui.addColor(options, 'floorColor').name('Floor Color').onChange(() => {
+      const floorColor = new THREE.Color(options.floorColor);
+      materialFloor.color = floorColor;
+    });
+    const flowerColor = gui.addFolder('Plant Color');
+    // flowerColor.addColor(options, 'sunFlowerColor').name('Sunflower Color').onChange(addSunflower);
+    // flowerColor.addColor(options, 'cactusColor').name('Cactus Color').onChange(addCactus);
+    // flowerColor.addColor(options, 'lilliesColor').name('Lillies Color').onChange(addLillies);
+    // flowerColor.addColor(options, 'lungwortColor').name('Lungwort Color').onChange(addLungwort);
+    // flowerColor.addColor(options, 'zinniasColor').name('Zinnias Color').onChange(addZinnias);
+    
     const spotlightFolder = gui.addFolder('Spotlight');
     spotlightFolder.addColor(spotlightControls, 'color').name('Color').onChange(() => {
       spotlight.color.set(spotlightControls.color);
@@ -323,7 +352,9 @@
       spotlight.penumbra = spotlightControls.penumbra;
     });
 
-    //GUI
+    gui.add(weather, 'RainVar').name('Rain').onChange(value => {rainOn = value});
+    gui.add(weather, 'SunVar', 0, 1).name('Sun').onChange(value => {sunOn = value});
+
     const updateSpotlight = () => 
     {
       spotlight.color.set(options.spotlight.color);
@@ -334,19 +365,9 @@
       spotLightHelper.update();
     };
 
-    // Spotlight Helper
-    var spotLightHelper = new THREE.SpotLightHelper(spotlight);
-    scene.add(spotLightHelper);
     
-    // Shadows
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-    // Function to toggle spotlight helper visibility
-    const toggleSpotlightHelper = () => {
-      spotLightHelper.visible = options.showSpotlightHelper;
-    };
-    toggleSpotlightHelper();
+    
 
     // Raycaster
     var raycaster = new THREE.Raycaster();
@@ -413,9 +434,9 @@
     // Function to update floor color
     const updateFloorColor = () => {
       const floorColor = new THREE.Color(options.floorColor);
-      if (material_floor) { // Check if material_floor is defined
-        material_floor.color = floorColor;
-        material_floor.needsUpdate = true;
+      if (materialFloor) { // Check if materialFloor is defined
+        materialFloor.color = floorColor;
+        materialFloor.needsUpdate = true;
       }
     };
     updateFloorColor();
