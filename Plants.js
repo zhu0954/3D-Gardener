@@ -155,6 +155,6 @@ export const addLungwort = (mainScene, position, colour) => {
       }
     });
 
-    scene.add(gltf.scene);
+    mainScene.add(gltf.scene);
   });
 }
