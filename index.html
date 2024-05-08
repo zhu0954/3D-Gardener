@@ -43,32 +43,15 @@
 	<script type="module">
     import * as THREE from 'three';
     import * as WEATHER from './Weather.js';
-    import * as PLANTS from './Plants.js'
+    import * as PLANTS from './Plants.js';
+    import * as UI from './UserInterface.js'
     import { OrbitControls } from './jsm/controls/OrbitControls.js';
     import { GUI } from './build/dat.gui.module.js';
 
     let scene, camera, renderer, controls, directionalLight, rain, spotlight,
     posAttr, floorMesh, materialFloor, cube, sun, sunOn = false, rainOn = false;
 
-    const options = 
-    {
-      addObject: 'Sunflower',
-      deleteMode: false,
-      showSpotlightHelper: true,
-      floorColor: '#aecd54',
-      spotlight: {
-      color: '#ffffff',
-      intensity: 0.5,
-      position: { x: 10, y: 40, z: 40 },
-      angle: Math.PI / 6,
-      penumbra: 1,
-      },
-      sunFlowerColor: '#ffffff',
-      cactusColor: '#ffffff' ,
-      zinniasColor: '#ffffff',
-      lilliesColor: '#ffffff',
-      lungwortColor: '#ffffff'
-    };
+    const options = UI.options;
 
     function init() {
       scene = new THREE.Scene( );
@@ -159,13 +142,12 @@
     
     function animate() {
       sun.visible = sunOn;
-      // sunColourChange(sunOn);
       rain.visible = rainOn;
       posAttr = WEATHER.animateRain();
       posAttr.needsUpdate = true;
       PLANTS.weatherEffects(scene, rainOn, sunOn);
       if(rainOn){
-      renderer.setClearColor(0x00008B);
+        renderer.setClearColor(0x00008B);
       }
       else{
         renderer.setClearColor(0x87ceeb);
@@ -178,7 +160,6 @@
 
     init();
     renderer.setClearColor(0x87ceeb);
-    
 
     var MyResize = function ( )
     {
@@ -191,84 +172,15 @@
     };
 
     window.addEventListener( 'resize', MyResize);
-
-    const gui = new GUI();
     
     //GUI
-    const weather = {
-        RainVar: false,
-        SunVar: false,
-    };
-
-    
-
-    const spotlightControls = 
-    {
-      color: spotlight.color.getHex(),
-      intensity: spotlight.intensity,
-      position: spotlight.position,
-      angle: spotlight.angle,
-      penumbra: spotlight.penumbra
-    };
-
-    gui.add(options, 'addObject', ['Sunflower', 'Cactus', 'Zinnias', 'Lillies','Lungwort', 'Rose']).name('Add Object');
-    gui.add(options, 'deleteMode').name('Delete Mode').onChange((enabled) =>{
-      console.log("Delete Mode: " + (enabled ? "Enabled" : "Disabled"));
-    })
-    gui.add(options, 'showSpotlightHelper').name('Show Spotlight Helper').onChange(() => {
-      toggleSpotlightHelper();
-    });
-    gui.addColor(options, 'floorColor').name('Floor Color').onChange(() => {
-      const floorColor = new THREE.Color(options.floorColor);
-      materialFloor.color = floorColor;
-    });
-    //const flowerColor = gui.addFolder('Plant Color');
-    // flowerColor.addColor(options, 'sunFlowerColor').name('Sunflower Color').onChange(addSunflower);
-    // flowerColor.addColor(options, 'cactusColor').name('Cactus Color').onChange(addCactus);
-    // flowerColor.addColor(options, 'lilliesColor').name('Lillies Color').onChange(addLillies);
-    // flowerColor.addColor(options, 'lungwortColor').name('Lungwort Color').onChange(addLungwort);
-    // flowerColor.addColor(options, 'zinniasColor').name('Zinnias Color').onChange(addZinnias);
-    
-    const spotlightFolder = gui.addFolder('Spotlight');
-    spotlightFolder.addColor(spotlightControls, 'color').name('Color').onChange(() => {
-      spotlight.color.set(spotlightControls.color);
-    });
-    spotlightFolder.add(spotlightControls, 'intensity', 0, 1).name('Intensity').onChange(() => {
-      spotlight.intensity = spotlightControls.intensity;
-    });
-    spotlightFolder.add(spotlightControls.position, 'x', -50, 200).name('X Position').onChange(() => {
-      spotlight.position.x = spotlightControls.position.x;
-    });
-    spotlightFolder.add(spotlightControls.position, 'y', -50, 200).name('Y Position').onChange(() => {
-      spotlight.position.y = spotlightControls.position.y;
-    });
-    spotlightFolder.add(spotlightControls.position, 'z', -50, 200).name('Z Position').onChange(() => {
-      spotlight.position.z = spotlightControls.position.z;
-    });
-    spotlightFolder.add(spotlightControls, 'angle', 0, Math.PI).name('Angle').onChange(() => {
-      spotlight.angle = spotlightControls.angle;
-    });
-    spotlightFolder.add(spotlightControls, 'penumbra', 0, 2).name('Penumbra').onChange(() => {
-      spotlight.penumbra = spotlightControls.penumbra;
-    });
+    const gui = UI.gui;
+    const weather = UI.weather;
+    const spotlightControls = UI.spotlightControlsConstant(spotlight);
+    UI.createSpotlightControls(spotlight, spotlightControls);
 
     gui.add(weather, 'RainVar').name('Rain').onChange(value => {rainOn = value});
     gui.add(weather, 'SunVar', 0, 1).name('Sun').onChange(value => {sunOn = value});
-    
-
-    const updateSpotlight = () => 
-    {
-      spotlight.color.set(options.spotlight.color);
-      spotlight.intensity = options.spotlight.intensity;
-      spotlight.position.set(options.spotlight.position.x, options.spotlight.position.y, options.spotlight.position.z);
-      spotlight.angle = options.spotlight.angle;
-      spotlight.penumbra = options.spotlight.penumbra;
-      spotLightHelper.update();
-    };
-
-    
-
-    
 
     // Raycaster
     var raycaster = new THREE.Raycaster();
@@ -309,7 +221,6 @@
             const newPosition = floorIntersect.point;
             switch(options.addObject) {
               case 'Cactus':
-                // console.log(PLANTS.addCactus(newPosition, options.cactusColor))
                 PLANTS.addCactus(scene, newPosition, options.cactusColor);
                 break;
               case 'Sunflower':
