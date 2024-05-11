@@ -98,30 +98,6 @@
       spotlight.shadow.mapSize.height = 2048;
       scene.add(spotlight);
 
-      // Create floor
-      const createFloor = () => 
-      {
-        const normal_map = new THREE.TextureLoader().load('Models/Floor/wispy-grass-meadow_normal-ogl.png');
-        normal_map.wrapS = normal_map.wrapT = THREE.RepeatWrapping;
-        normal_map.repeat = new THREE.Vector2(1, 1);
-
-        materialFloor = new THREE.MeshPhongMaterial({ 
-          shininess: 100,
-          side: THREE.DoubleSide,
-          color: new THREE.Color(options.floorColor),
-          normalMap: normal_map,
-        });
-
-        const geometryFloor = new THREE.PlaneGeometry(200, 200);
-        floorMesh = new THREE.Mesh(geometryFloor, materialFloor);
-        floorMesh.rotation.x -= Math.PI / 2;
-        floorMesh.position.y -= 10;
-        floorMesh.receiveShadow = true;
-        floorMesh.name = "Floor";
-        scene.add(floorMesh);
-      };
-      createFloor();
-
       // Spotlight Helper
       var spotLightHelper = new THREE.SpotLightHelper(spotlight);
       scene.add(spotLightHelper);
@@ -182,6 +158,7 @@
     gui.add(weather, 'RainVar').name('Rain').onChange(value => {rainOn = value});
     gui.add(weather, 'SunVar', 0, 1).name('Sun').onChange(value => {sunOn = value});
 
+    
     // Raycaster
     var raycaster = new THREE.Raycaster();
     document.addEventListener('mousedown', (event) => {
@@ -211,33 +188,35 @@
                 if (node.geometry) node.geometry.dispose();
                 if (node.material) node.material.dispose();
               });
-              break; 
+              break;
             }
           }
         } else {
           // Handle adding plants
-          const floorIntersect = intersects.find(intersect => intersect.object.name === "Floor");
+          const floorIntersect = intersects.find(intersect => intersect.object.name === "Dirt");
           if (floorIntersect) {
             const newPosition = floorIntersect.point;
-            switch(options.addObject) {
-              case 'Cactus':
-                PLANTS.addCactus(scene, newPosition, options.cactusColor);
-                break;
-              case 'Sunflower':
-                PLANTS.addSunflower(scene, newPosition, options.sunFlowerColor);
-                break;
-              case 'Zinnias':
-                PLANTS.addZinnias(scene, newPosition, options.zinniasColor);
-                break;
-              case 'Lillies':
-                PLANTS.addLillies(scene, newPosition, options.lilliesColor);
-                break;
-              case 'Lungwort':
-                PLANTS.addLungwort(scene, newPosition, options.lungwortColor);
-                break;
-              case 'Rose':
-                PLANTS.addRose(scene, newPosition);
-                break;
+            if (isOutsidePath(newPosition)) {  // Check if the position is outside the path
+              switch (options.addObject) {
+                case 'Cactus':
+                  PLANTS.addCactus(scene, newPosition, options.cactusColor);
+                  break;
+                case 'Sunflower':
+                  PLANTS.addSunflower(scene, newPosition, options.sunFlowerColor);
+                  break;
+                case 'Zinnias':
+                  PLANTS.addZinnias(scene, newPosition, options.zinniasColor);
+                  break;
+                case 'Lillies':
+                  PLANTS.addLillies(scene, newPosition, options.lilliesColor);
+                  break;
+                case 'Lungwort':
+                  PLANTS.addLungwort(scene, newPosition, options.lungwortColor);
+                  break;
+                case 'Rose':
+                  PLANTS.addRose(scene, newPosition);
+                  break;
+              }
             }
           }
         }
@@ -245,15 +224,87 @@
     });
 
 
-    // Function to update floor color
-    const updateFloorColor = () => {
-      const floorColor = new THREE.Color(options.floorColor);
-      if (materialFloor) { 
-        materialFloor.color = floorColor;
-        materialFloor.needsUpdate = true;
-      }
-    };
-    updateFloorColor();
+
+     // Check if a position is outside the path
+    function isOutsidePath(position) {
+      const pathCenter = new THREE.Vector2(0, 0); // Assuming path is centered at (0, 0)
+      const pathSize = new THREE.Vector2(189.28, 189.28); // Size of the path
+
+      const halfPathSize = pathSize.clone().multiplyScalar(0.5);
+      const minX = pathCenter.x - halfPathSize.x;
+      const maxX = pathCenter.x + halfPathSize.x;
+      const minY = pathCenter.y - halfPathSize.y;
+      const maxY = pathCenter.y + halfPathSize.y;
+
+      return (position.x < minX || position.x > maxX || position.z < minY || position.z > maxY);
+    }
+
+    // TEXTURES
+
+    const texture = new THREE.TextureLoader();
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    const colorTex = texture.load('textures/bestgrass/Grass004_4K-JPG_Color.jpg');
+    const dispTex = texture.load('textures/bestgrass/Grass004_4K-JPG_Displacement.jpg');
+    const nrmTex = texture.load('textures/bestgrass/Grass004_4K-JPG_NormalDX.jpg');
+    const occTex = texture.load('textures/bestgrass/Grass004_4K-JPG_AmbientOcclusion.jpg');
+    const roughTex = texture.load('textures/bestgrass/Grass004_4K-JPG_Roughness.jpg');
+    const basegeo = new THREE.PlaneGeometry(142.86, 142.86);
+    const basemat = new THREE.MeshStandardMaterial({
+      map: colorTex,
+      normalMap: nrmTex,
+      displacementMap: dispTex,
+      roughnessMap: roughTex,
+      aoMap: occTex,
+      side: THREE.DoubleSide,
+    });
+
+    const base = new THREE.Mesh(basegeo, basemat);
+    base.rotation.x = -Math.PI / 2;
+    base.position.y = 1;
+    scene.add(base);
+
+    const colorTexS = texture.load('textures/path/PavingStones138_4K-JPG_Color.jpg');
+    const dispTexS = texture.load('textures/path/PavingStones138_4K-JPG_Displacement.jpg');
+    const nrmTexS = texture.load('textures/path/PavingStones138_4K-JPG_NormalDX.jpg');
+    const occTexS = texture.load('textures/path/PavingStones138_4K-JPG_AmbientOcclusion.jpg');
+    const roughTexS = texture.load('textures/path/PavingStones138_4K-JPG_Roughness.jpg');
+    const pathgeoS = new THREE.PlaneGeometry(189.28, 189.28);
+    const pathmatS = new THREE.MeshStandardMaterial({
+      map: colorTexS,
+      normalMap: nrmTexS,
+      displacementMap: dispTexS,
+      roughnessMap: roughTexS,
+      aoMap: occTexS,
+      side: THREE.DoubleSide,
+    });
+
+    const path = new THREE.Mesh(pathgeoS, pathmatS);
+    path.rotation.x = -Math.PI / 2;
+    path.position.y = -0.1;
+    scene.add(path);
+
+    const colorTexD = texture.load('textures/dirt/Ground048_4K-JPG_Color.jpg');
+    const dispTexD = texture.load('textures/dirt/Ground048_4K-JPG_Displacement.jpg');
+    const nrmTexD = texture.load('textures/dirt/Ground048_4K-JPG_NormalDX.jpg');
+    const occTexD = texture.load('textures/dirt/Ground048_4K-JPG_AmbientOcclusion.jpg');
+    const roughTexD = texture.load('textures/dirt/Ground048_4K-JPG_Roughness.jpg');
+    const dirtgeoD = new THREE.PlaneGeometry(250, 250);
+    const dirtmatD = new THREE.MeshStandardMaterial({
+      map: colorTexD,
+      normalMap: nrmTexD,
+      displacementMap: dispTexD,
+      roughnessMap: roughTexD,
+      aoMap: occTexD,
+      side: THREE.DoubleSide,
+    });
+
+    const dirt = new THREE.Mesh(dirtgeoD, dirtmatD);
+    dirt.rotation.x = -Math.PI / 2;
+    dirt.position.y = -1;
+    dirt.name = "Dirt";
+    scene.add(dirt);
+
 
 
   </script>
