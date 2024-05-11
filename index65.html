@@ -1,0 +1,58 @@
+<html>
+  <head>
+    <title>Geometry Generation</title>
+  </head>
+
+  <style>
+  body {margin: 0;}
+  canvas {width: 100%; height: 100%;}
+  </style>
+
+  <body>
+	<link rel="shortcut icon" href="#">
+   
+    <style>
+    			body {
+    				font-family: Monospace;
+    				background-color: #00c3ff;
+    				color: #fff;
+    				margin: 0px;
+    				overflow: hidden;
+    			}
+    			#info {
+    				position: absolute;
+    				top: 10px;
+    				width: 100%;
+    				text-align: center;
+    			}
+    </style>
+
+    <div id="info">
+      <p>Computer Graphics Group Assessment</p>
+	  <p>Garden Generator</p>
+	  <p>space to walk around</p>
+    </div>
+
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "./build/three.module.js"
+				}
+			}
+		</script>
+
+	  <script type="module">
+
+	//setting the scene
+	  import * as THREE from 'three';
+    import * as WEATHER from './Weather.js';
+    import * as PLANTS from './Plants.js';
+    import * as UI from './UserInterface.js'
+    import { OrbitControls } from './jsm/controls/OrbitControls.js';
+    import { GUI } from './build/dat.gui.module.js';
+
+
+
+    </script>
+  </body>
+</html>
