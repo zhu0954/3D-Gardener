@@ -38,11 +38,13 @@
     import * as WEATHER from './Weather.js';
     import * as PLANTS from './Plants.js';
     import * as UI from './UserInterface.js';
+    import * as GRASS from './Grass.js'
     import { OrbitControls } from './jsm/controls/OrbitControls.js';
+    import { PointerLockControls } from './jsm/controls/PointerLockControls.js';
     import { GUI } from './build/dat.gui.module.js';
     import { GLTFLoader } from './jsm/loaders/GLTFLoader.js';
 
-    let scene, camera, renderer, controls, directionalLight, rain, spotlight, posAttr, floorMesh, materialFloor, sun, sunOn = false, rainOn = false;
+    let scene, camera, renderer, controls, pointcontrols, directionalLight, rain, spotlight, posAttr, floorMesh, materialFloor, sun, sunOn = false, rainOn = false;
     const options = UI.options;
     const clock = new THREE.Clock();  // Define clock here
 
@@ -52,7 +54,7 @@
       camera = new THREE.PerspectiveCamera(45, ratio, 0.1, 1000);
       sunOn = false;
 
-      camera.position.set(0, 3, 30);
+      camera.position.set(0, 40, 60);
       camera.lookAt(0, 0, 1);
 
       renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -62,6 +64,7 @@
 
       // CONTROLS
       controls = new OrbitControls(camera, renderer.domElement);
+      pointcontrols = new PointerLockControls( camera, document.body );
 
       // Rain
       rain = WEATHER.createRain();
@@ -74,12 +77,12 @@
       scene.add(sun.target);
 
       // Lighting
-      var cameralight = new THREE.PointLight(new THREE.Color(1, 1, 1), 0.1); // Reduced intensity
+      /*var cameralight = new THREE.PointLight(new THREE.Color(1, 1, 1), 0.1); // Reduced intensity
       camera.add(cameralight);
       scene.add(camera);
 
       var ambientlight = new THREE.AmbientLight(new THREE.Color(1, 1, 1), 0.1); // Reduced intensity
-      scene.add(ambientlight);
+      scene.add(ambientlight);*/
 
       // Spotlight
       spotlight = new THREE.SpotLight(new THREE.Color(1, 1, 1), 0.3); // Reduced intensity
@@ -118,8 +121,21 @@
       } else {
         renderer.setClearColor(0x87ceeb);
       }
+
+      if(pointcontrols.isLocked){
+        if(moveForward){
+          pointcontrols.moveForward(3.5);
+        } else if (moveRight){
+          pointcontrols.moveRight(3.5);
+        } else if (moveBackward){
+          pointcontrols.moveForward(-3.5);
+        } else if (moveLeft){
+          pointcontrols.moveRight(-3.5);
+        }
+      }
+
       renderer.render(scene, camera);
-      controls.update();
+      //controls.update();
       requestAnimationFrame(animate);
     }
 
@@ -137,6 +153,46 @@
 
     window.addEventListener('resize', MyResize);
 
+    var count = 0;
+
+  var day = true;
+	var night = false;
+	const sun2 = new THREE.DirectionalLight(0xFFF49E, 1);
+	sun2.position.set(50, 80, -50);
+
+	const moon = new THREE.PointLight(0x4D7DDD, 0.5);
+	moon.position.set(50, 80, 50);
+
+	const ambientLight1 = new THREE.AmbientLight(new THREE.Color(0.5,0.5,0.5), 0.6);
+	//scene.add(ambientLight);
+
+	const ambientLight2 = new THREE.AmbientLight(new THREE.Color(0.5,0.5,0.5), 0.3);
+	//scene.add(ambientLight);
+
+	var theTime = function(){
+		if(day){
+			if(count == 1){
+				count--;
+				scene.remove(moon);
+				scene.remove(ambientLight2);
+			}
+			scene.add(sun2);
+			scene.add(ambientLight1);
+			count++;
+		}
+		if(night){
+			if(count == 1){
+				scene.remove(sun2);
+				scene.remove(ambientLight1);
+				count--;
+			}
+			scene.add(ambientLight2);
+			scene.add(moon);
+			count++;
+		}
+		
+	}
+
     // GUI
     const gui = UI.gui;
     const weather = UI.weather;
@@ -144,7 +200,78 @@
     UI.createSpotlightControls(spotlight, spotlightControls);
 
     gui.add(weather, 'RainVar').name('Rain').onChange(value => { rainOn = value });
-    gui.add(weather, 'SunVar', 0, 1).name('Sun').onChange(value => { sunOn = value });
+    gui.add(weather, 'SunVar', 0, 1).name('Heat').onChange(value => { sunOn = value });
+
+    var params = {
+		//colour: 0xB6D7A8,
+		grassAmount: 10,
+		//fence: 'basic',
+		time: 'day'
+	};
+
+    var gardencust = gui.addFolder('Garden Customisation');
+    //gardencust.addColor(params, 'colour').name("Garden Colour");
+    gardencust.add(params, 'grassAmount', 0, 40, 5).name("Grass Total").onChange(function(value){
+      GRASS.grassRandomiser(params.grassAmount,scene);
+    });
+    gardencust.add(params, 'time', ['day', 'night']).name("Time").onChange(function(value){
+      if(value == 'day'){
+        day = true;
+        night = false;
+      } else{
+        night = true;
+        day = false;
+      }
+    });
+
+    var MyUpdateLoop = function (){
+      GRASS.grassRandomiser(params.grassAmount, scene);
+		  theTime();
+      renderer.render(scene,camera);
+      requestAnimationFrame(MyUpdateLoop);
+    };
+    MyUpdateLoop();
+
+    //moving
+
+    var moveForward = false;
+    var moveLeft = false;
+    var moveBackward = false;
+    var moveRight = false;
+
+  const onKeyDown = function(event){
+    switch(event.keyCode){
+      case 32: //if space pressed
+        pointcontrols.lock();
+        camera.position.set(0,40,120);
+        break;
+      case 87: //w 
+        moveForward = true; break;
+      case 65: //a
+        moveLeft = true; break;
+      case 83: //s
+        moveBackward = true; break;
+      case 68: //d*/
+        moveRight = true; break;
+    }
+	}
+
+	const onKeyUp = function(event){
+    switch(event.keyCode){
+      case 87: //w 
+        moveForward = false; break;
+      case 65: //a
+        moveLeft = false; break;
+      case 83: //s
+        moveBackward = false; break;
+      case 68: //d*/
+        moveRight = false; break;
+    }
+	}
+
+	document.addEventListener( 'keydown', onKeyDown );
+	document.addEventListener( 'keyup', onKeyUp );
+
 
     // Raycaster
     var raycaster = new THREE.Raycaster();
@@ -306,6 +433,7 @@
   loaderT.load('scene.gltf', (gltf) => {
       tree = gltf.scene;
       scene.add(tree);
+      tree.scale.set(5, 5, 5);
       tree.position.x = -1;
       trees.push(tree);
   });
