@@ -177,10 +177,10 @@
     }
 
     function addBuilding() {
-      const buildingGeo = new THREE.BoxGeometry(250, 200, 250);
+      const buildingGeo = new THREE.BoxGeometry(250, 500, 250);
       const buildingMat = new THREE.MeshStandardMaterial({ color: 0x888888 });
       const building = new THREE.Mesh(buildingGeo, buildingMat);
-      building.position.set(0, -100, 0);
+      building.position.set(0, -250, 0);
       building.receiveShadow = true;
       scene.add(building);
     }
@@ -343,7 +343,7 @@
 
     const path = new THREE.Mesh(pathgeoS, pathmatS);
     path.rotation.x = -Math.PI / 2;
-    path.position.y = -0.1;
+    path.position.y = 0.5;
     path.receiveShadow = true;
     scene.add(path);
 
@@ -364,7 +364,7 @@
 
     const dirt = new THREE.Mesh(dirtgeoD, dirtmatD);
     dirt.rotation.x = -Math.PI / 2;
-    dirt.position.y = 0;
+    dirt.position.y = -1;
     dirt.name = "Dirt";
     dirt.receiveShadow = true;
     scene.add(dirt);
@@ -373,7 +373,7 @@
     const trees = [];
     let tree;
     let treeSelected = false;
-    const mouse = new THREE.Vector2();z
+    const mouse = new THREE.Vector2();
     let selectedTree = null;
     const originalColors = new Map();
 
@@ -448,6 +448,9 @@
     }
 
     document.addEventListener('mousedown', onDocumentMouseDown, false);
+
+  
   </script>
 </body>
 </html>
+
