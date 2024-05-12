@@ -1,0 +1,377 @@
+<html>
+<head>
+  <title>3D Gardener</title>
+</head>
+<style>
+  body {margin: 0;}
+  canvas {width: 100%; height: 100%;}
+</style>
+<body>
+  <link rel="shortcut icon" href="#">
+  <style>
+    body {
+      font-family: Monospace;
+      background-color: #00c3ff;
+      color: #fff;
+      margin: 0px;
+      overflow: hidden;
+    }
+    #info {
+      position: absolute;
+      top: 10px;
+      width: 100%;
+      text-align: center;
+    }
+  </style>
+  <div id="info">
+    <p>3D Gardener</p>
+  </div>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./build/three.module.js"
+      }
+    }
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+    import * as WEATHER from './Weather.js';
+    import * as PLANTS from './Plants.js';
+    import * as UI from './UserInterface.js';
+    import { OrbitControls } from './jsm/controls/OrbitControls.js';
+    import { GUI } from './build/dat.gui.module.js';
+    import { GLTFLoader } from './jsm/loaders/GLTFLoader.js';
+
+    let scene, camera, renderer, controls, directionalLight, rain, spotlight, posAttr, floorMesh, materialFloor, sun, sunOn = false, rainOn = false;
+    const options = UI.options;
+    const clock = new THREE.Clock();  // Define clock here
+
+    function init() {
+      scene = new THREE.Scene();
+      var ratio = window.innerWidth / window.innerHeight;
+      camera = new THREE.PerspectiveCamera(45, ratio, 0.1, 1000);
+      sunOn = false;
+
+      camera.position.set(0, 3, 30);
+      camera.lookAt(0, 0, 1);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      document.body.appendChild(renderer.domElement);
+
+      // CONTROLS
+      controls = new OrbitControls(camera, renderer.domElement);
+
+      // Rain
+      rain = WEATHER.createRain();
+      posAttr = WEATHER.getPositionAttributes();
+      scene.add(rain);
+
+      // Sun
+      sun = WEATHER.createSun();
+      scene.add(sun);
+      scene.add(sun.target);
+
+      // Lighting
+      var cameralight = new THREE.PointLight(new THREE.Color(1, 1, 1), 0.1); // Reduced intensity
+      camera.add(cameralight);
+      scene.add(camera);
+
+      var ambientlight = new THREE.AmbientLight(new THREE.Color(1, 1, 1), 0.1); // Reduced intensity
+      scene.add(ambientlight);
+
+      // Spotlight
+      spotlight = new THREE.SpotLight(new THREE.Color(1, 1, 1), 0.3); // Reduced intensity
+      spotlight.position.set(10, 40, 40);
+      spotlight.angle = Math.PI / 6;
+      spotlight.penumbra = 1;
+      spotlight.castShadow = true;
+      spotlight.shadow.mapSize.width = 1024; // Reduce shadow map size
+      spotlight.shadow.mapSize.height = 1024; // Reduce shadow map size
+      scene.add(spotlight);
+
+      // Shadows
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+      // Optimize render settings
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.gammaFactor = 2.2;
+      renderer.outputEncoding = THREE.sRGBEncoding;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 0.75; // Reduced exposure to decrease brightness
+
+      animate();
+    }
+
+    function animate() {
+      const delta = clock.getDelta();
+      sun.visible = sunOn;
+      rain.visible = rainOn;
+      posAttr = WEATHER.animateRain();
+      posAttr.needsUpdate = true;
+      PLANTS.weatherEffects(scene, rainOn, sunOn);
+      if (rainOn) {
+        renderer.setClearColor(0x00008B);
+      } else {
+        renderer.setClearColor(0x87ceeb);
+      }
+      renderer.render(scene, camera);
+      controls.update();
+      requestAnimationFrame(animate);
+    }
+
+    init();
+    renderer.setClearColor(0x87ceeb);
+
+    var MyResize = function () {
+      var width = window.innerWidth;
+      var height = window.innerHeight;
+      renderer.setSize(width, height);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.render(scene, camera);
+    };
+
+    window.addEventListener('resize', MyResize);
+
+    // GUI
+    const gui = UI.gui;
+    const weather = UI.weather;
+    const spotlightControls = UI.spotlightControlsConstant(spotlight);
+    UI.createSpotlightControls(spotlight, spotlightControls);
+
+    gui.add(weather, 'RainVar').name('Rain').onChange(value => { rainOn = value });
+    gui.add(weather, 'SunVar', 0, 1).name('Sun').onChange(value => { sunOn = value });
+
+    // Raycaster
+    var raycaster = new THREE.Raycaster();
+    document.addEventListener('mousedown', (event) => {
+      const mousePos = new THREE.Vector2();
+      mousePos.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mousePos.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(mousePos, camera);
+
+      const intersects = raycaster.intersectObjects(scene.children, true);
+
+      if (intersects.length > 0) {
+        if (options.deleteMode) {
+          // deletion
+          for (let intersect of intersects) {
+            let target = intersect.object;
+            while (target.parent && target.parent !== scene) {
+              if (target.parent.name === "Plant") {
+                target = target.parent;
+                break;
+              }
+              target = target.parent;
+            }
+            if (target.name === "Plant") {
+              scene.remove(target);
+              // deleting resources
+              target.traverse(node => {
+                if (node.geometry) node.geometry.dispose();
+                if (node.material) node.material.dispose();
+              });
+              break;
+            }
+          }
+        } else {
+          // Handle adding plants
+          const floorIntersect = intersects.find(intersect => intersect.object.name === "Dirt");
+          if (floorIntersect) {
+            const newPosition = floorIntersect.point;
+            if (isOutsidePath(newPosition)) {  // Check if the position is outside the path
+              switch (options.addObject) {
+                case 'Cactus':
+                  PLANTS.addCactus(scene, newPosition, options.cactusColor);
+                  break;
+                case 'Sunflower':
+                  PLANTS.addSunflower(scene, newPosition, options.sunFlowerColor);
+                  break;
+                case 'Zinnias':
+                  PLANTS.addZinnias(scene, newPosition, options.zinniasColor);
+                  break;
+                case 'Lillies':
+                  PLANTS.addLillies(scene, newPosition, options.lilliesColor);
+                  break;
+                case 'Lungwort':
+                  PLANTS.addLungwort(scene, newPosition, options.lungwortColor);
+                  break;
+                case 'Rose':
+                  PLANTS.addRose(scene, newPosition);
+                  break;
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // Check if a position is outside the path
+    function isOutsidePath(position) {
+      const pathCenter = new THREE.Vector2(0, 0); // Assuming path is centered at (0, 0)
+      const pathSize = new THREE.Vector2(189.28, 189.28); // Size of the path
+
+      const halfPathSize = pathSize.clone().multiplyScalar(0.5);
+      const minX = pathCenter.x - halfPathSize.x;
+      const maxX = pathCenter.x + halfPathSize.x;
+      const minY = pathCenter.y - halfPathSize.y;
+      const maxY = pathCenter.y + halfPathSize.y;
+
+      return (position.x < minX || position.x > maxX || position.z < minY || position.z > maxY);
+    }
+
+    // TEXTURES
+    const texture = new THREE.TextureLoader();
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    const colorTex = texture.load('textures/bestgrass/Grass004_4K-JPG_Color.jpg');
+    const dispTex = texture.load('textures/bestgrass/Grass004_4K-JPG_Displacement.jpg');
+    const nrmTex = texture.load('textures/bestgrass/Grass004_4K-JPG_NormalDX.jpg');
+    const occTex = texture.load('textures/bestgrass/Grass004_4K-JPG_AmbientOcclusion.jpg');
+    const roughTex = texture.load('textures/bestgrass/Grass004_4K-JPG_Roughness.jpg');
+    const basegeo = new THREE.PlaneGeometry(142.86, 142.86);
+    const basemat = new THREE.MeshStandardMaterial({
+      map: colorTex,
+      normalMap: nrmTex,
+      displacementMap: dispTex,
+      roughnessMap: roughTex,
+      aoMap: occTex,
+      side: THREE.DoubleSide,
+    });
+
+    const base = new THREE.Mesh(basegeo, basemat);
+    base.rotation.x = -Math.PI / 2;
+    base.position.y = 1;
+    base.receiveShadow = true;
+    scene.add(base);
+
+    const colorTexS = texture.load('textures/path/PavingStones138_4K-JPG_Color.jpg');
+    const dispTexS = texture.load('textures/path/PavingStones138_4K-JPG_Displacement.jpg');
+    const nrmTexS = texture.load('textures/path/PavingStones138_4K-JPG_NormalDX.jpg');
+    const occTexS = texture.load('textures/path/PavingStones138_4K-JPG_AmbientOcclusion.jpg');
+    const roughTexS = texture.load('textures/path/PavingStones138_4K-JPG_Roughness.jpg');
+    const pathgeoS = new THREE.PlaneGeometry(189.28, 189.28);
+    const pathmatS = new THREE.MeshStandardMaterial({
+      map: colorTexS,
+      normalMap: nrmTexS,
+      displacementMap: dispTexS,
+      roughnessMap: roughTexS,
+      aoMap: occTexS,
+      side: THREE.DoubleSide,
+    });
+
+    const path = new THREE.Mesh(pathgeoS, pathmatS);
+    path.rotation.x = -Math.PI / 2;
+    path.position.y = -0.1;
+    path.receiveShadow = true;
+    scene.add(path);
+
+    const colorTexD = texture.load('textures/dirt/Ground048_4K-JPG_Color.jpg');
+    const dispTexD = texture.load('textures/dirt/Ground048_4K-JPG_Displacement.jpg');
+    const nrmTexD = texture.load('textures/dirt/Ground048_4K-JPG_NormalDX.jpg');
+    const occTexD = texture.load('textures/dirt/Ground048_4K-JPG_AmbientOcclusion.jpg');
+    const roughTexD = texture.load('textures/dirt/Ground048_4K-JPG_Roughness.jpg');
+    const dirtgeoD = new THREE.PlaneGeometry(250, 250);
+    const dirtmatD = new THREE.MeshStandardMaterial({
+      map: colorTexD,
+      normalMap: nrmTexD,
+      displacementMap: dispTexD,
+      roughnessMap: roughTexD,
+      aoMap: occTexD,
+      side: THREE.DoubleSide,
+    });
+
+    const dirt = new THREE.Mesh(dirtgeoD, dirtmatD);
+    dirt.rotation.x = -Math.PI / 2;
+    dirt.position.y = -1;
+    dirt.name = "Dirt";
+    dirt.receiveShadow = true;
+    scene.add(dirt);
+
+ // TREE MOVINGS
+
+  var trees = [];
+  var tree;
+  var treeSelected = false;
+  var mouse = new THREE.Vector2();
+  var raycaster = new THREE.Raycaster();
+  var selectedTree = null;
+  var originalColors = new Map();
+
+  const loaderT = new GLTFLoader().setPath('./Models/jungle_tree/');
+  loaderT.load('scene.gltf', (gltf) => {
+      tree = gltf.scene;
+      scene.add(tree);
+      tree.position.x = -1;
+      trees.push(tree);
+  });
+
+  function storeOriginalColors(object) {
+      object.traverse((child) => {
+          if (child.isMesh) {
+              originalColors.set(child.uuid, child.material.color.clone());
+          }
+      });
+  }
+
+  function changeColor(object, color) {
+      object.traverse((child) => {
+          if (child.isMesh) {
+              child.material.color.set(color);
+          }
+      });
+  }
+  function revertColors(object) {
+      object.traverse((child) => {
+          if (child.isMesh && originalColors.has(child.uuid)) {
+              child.material.color.copy(originalColors.get(child.uuid));
+          }
+      });
+  }
+  function onDocumentMouseDown(event) {
+      mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
+      mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+
+      if (!treeSelected) {
+          var intersects = raycaster.intersectObject(tree, true);
+
+          if (intersects.length > 0) {
+              console.log("CLICKED TREE");
+              treeSelected = true;
+              selectedTree = tree;
+
+              // Store original colors and change to highlight color
+              storeOriginalColors(selectedTree);
+              changeColor(selectedTree, 0xff0000); // Change color to red
+          }
+      } else {
+          var intersects2 = raycaster.intersectObject(base, true);
+
+          if (intersects2.length > 0) {
+              console.log("CLICKED BASE");
+
+              var pos = intersects2[0].point;
+              console.log("Placed!");
+              selectedTree.position.x = pos.x;
+              selectedTree.position.z = pos.z;
+
+              // Revert the color back to original
+              revertColors(selectedTree);
+
+              treeSelected = false;
+              selectedTree = null;
+          }
+      }
+  }
+
+  document.addEventListener('mousedown', onDocumentMouseDown, false);
+
+
+  </script>
+</body>
+</html>
