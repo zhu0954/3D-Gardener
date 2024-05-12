@@ -1,20 +1,20 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>3D Gardener</title>
-</head>
-<style>
-  body {margin: 0;}
-  canvas {width: 100%; height: 100%;}
-</style>
-<body>
-  <link rel="shortcut icon" href="#">
   <style>
     body {
+      margin: 0;
       font-family: Monospace;
       background-color: #00c3ff;
       color: #fff;
-      margin: 0px;
       overflow: hidden;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
     }
     #info {
       position: absolute;
@@ -23,6 +23,8 @@
       text-align: center;
     }
   </style>
+</head>
+<body>
   <div id="info">
     <p>3D Gardener</p>
   </div>
@@ -44,11 +46,11 @@
 
     let scene, camera, renderer, controls, directionalLight, rain, spotlight, posAttr, floorMesh, materialFloor, sun, sunOn = false, rainOn = false;
     const options = UI.options;
-    const clock = new THREE.Clock();  // Define clock here
+    const clock = new THREE.Clock();
 
     function init() {
       scene = new THREE.Scene();
-      var ratio = window.innerWidth / window.innerHeight;
+      const ratio = window.innerWidth / window.innerHeight;
       camera = new THREE.PerspectiveCamera(45, ratio, 0.1, 1000);
       sunOn = false;
 
@@ -74,36 +76,113 @@
       scene.add(sun.target);
 
       // Lighting
-      var cameralight = new THREE.PointLight(new THREE.Color(1, 1, 1), 0.1); // Reduced intensity
+      const cameralight = new THREE.PointLight(new THREE.Color(1, 1, 1), 0.1);
       camera.add(cameralight);
       scene.add(camera);
 
-      var ambientlight = new THREE.AmbientLight(new THREE.Color(1, 1, 1), 0.1); // Reduced intensity
+      const ambientlight = new THREE.AmbientLight(new THREE.Color(1, 1, 1), 0.1);
       scene.add(ambientlight);
 
       // Spotlight
-      spotlight = new THREE.SpotLight(new THREE.Color(1, 1, 1), 0.3); // Reduced intensity
+      spotlight = new THREE.SpotLight(new THREE.Color(1, 1, 1), 0.3);
       spotlight.position.set(10, 40, 40);
       spotlight.angle = Math.PI / 6;
       spotlight.penumbra = 1;
       spotlight.castShadow = true;
-      spotlight.shadow.mapSize.width = 1024; // Reduce shadow map size
-      spotlight.shadow.mapSize.height = 1024; // Reduce shadow map size
+      spotlight.shadow.mapSize.width = 1024;
+      spotlight.shadow.mapSize.height = 1024;
       scene.add(spotlight);
 
       // Shadows
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-      // Optimize render settings
-      renderer.shadowMap.enabled = true;
-      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       renderer.gammaFactor = 2.2;
       renderer.outputEncoding = THREE.sRGBEncoding;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 0.75; // Reduced exposure to decrease brightness
+      renderer.toneMappingExposure = 0.75;
+
+      // Adding rooftop elements
+      addRooftopElements();
+      // Adding building underneath
+      addBuilding();
 
       animate();
+    }
+
+    function addRooftopElements() {
+      const textureLoader = new THREE.TextureLoader();
+
+      // Adding dirt surface
+      const colorTexD = textureLoader.load('textures/dirt/Ground048_4K-JPG_Color.jpg');
+      const dispTexD = textureLoader.load('textures/dirt/Ground048_4K-JPG_Displacement.jpg');
+      const nrmTexD = textureLoader.load('textures/dirt/Ground048_4K-JPG_NormalDX.jpg');
+      const occTexD = textureLoader.load('textures/dirt/Ground048_4K-JPG_AmbientOcclusion.jpg');
+      const roughTexD = textureLoader.load('textures/dirt/Ground048_4K-JPG_Roughness.jpg');
+      const dirtgeoD = new THREE.PlaneGeometry(250, 250);
+      const dirtmatD = new THREE.MeshStandardMaterial({
+        map: colorTexD,
+        normalMap: nrmTexD,
+        displacementMap: dispTexD,
+        roughnessMap: roughTexD,
+        aoMap: occTexD,
+        side: THREE.DoubleSide,
+      });
+
+      const dirt = new THREE.Mesh(dirtgeoD, dirtmatD);
+      dirt.rotation.x = -Math.PI / 2;
+      dirt.position.y = 0;
+      dirt.name = "Dirt";
+      dirt.receiveShadow = true;
+      scene.add(dirt);
+
+      // Adding rooftop edges
+      const edgeGeo = new THREE.BoxGeometry(250, 10, 5);
+      const edgeMat = new THREE.MeshStandardMaterial({ color: 0x555555 });
+      
+      const frontEdge = new THREE.Mesh(edgeGeo, edgeMat);
+      frontEdge.position.set(0, 5, -127.5);
+      scene.add(frontEdge);
+
+      const backEdge = new THREE.Mesh(edgeGeo, edgeMat);
+      backEdge.position.set(0, 5, 127.5);
+      scene.add(backEdge);
+
+      const sideGeo = new THREE.BoxGeometry(5, 10, 250);
+      const leftEdge = new THREE.Mesh(sideGeo, edgeMat);
+      leftEdge.position.set(-127.5, 5, 0);
+      scene.add(leftEdge);
+
+      const rightEdge = new THREE.Mesh(sideGeo, edgeMat);
+      rightEdge.position.set(127.5, 5, 0);
+      scene.add(rightEdge);
+
+      // Adding some cityscape elements
+      const buildingGeo = new THREE.BoxGeometry(50, 100, 50);
+      const buildingMat = new THREE.MeshStandardMaterial({ color: 0x777777 });
+      const building1 = new THREE.Mesh(buildingGeo, buildingMat);
+      building1.position.set(-200, 50, -200);
+      scene.add(building1);
+
+      const building2 = new THREE.Mesh(buildingGeo, buildingMat);
+      building2.position.set(200, 50, -200);
+      scene.add(building2);
+
+      const building3 = new THREE.Mesh(buildingGeo, buildingMat);
+      building3.position.set(-200, 50, 200);
+      scene.add(building3);
+
+      const building4 = new THREE.Mesh(buildingGeo, buildingMat);
+      building4.position.set(200, 50, 200);
+      scene.add(building4);
+    }
+
+    function addBuilding() {
+      const buildingGeo = new THREE.BoxGeometry(250, 200, 250);
+      const buildingMat = new THREE.MeshStandardMaterial({ color: 0x888888 });
+      const building = new THREE.Mesh(buildingGeo, buildingMat);
+      building.position.set(0, -100, 0);
+      building.receiveShadow = true;
+      scene.add(building);
     }
 
     function animate() {
@@ -126,14 +205,14 @@
     init();
     renderer.setClearColor(0x87ceeb);
 
-    var MyResize = function () {
-      var width = window.innerWidth;
-      var height = window.innerHeight;
+    function MyResize() {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
       renderer.setSize(width, height);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
       renderer.render(scene, camera);
-    };
+    }
 
     window.addEventListener('resize', MyResize);
 
@@ -147,7 +226,7 @@
     gui.add(weather, 'SunVar', 0, 1).name('Sun').onChange(value => { sunOn = value });
 
     // Raycaster
-    var raycaster = new THREE.Raycaster();
+    const raycaster = new THREE.Raycaster();
     document.addEventListener('mousedown', (event) => {
       const mousePos = new THREE.Vector2();
       mousePos.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -183,7 +262,7 @@
           const floorIntersect = intersects.find(intersect => intersect.object.name === "Dirt");
           if (floorIntersect) {
             const newPosition = floorIntersect.point;
-            if (isOutsidePath(newPosition)) {  // Check if the position is outside the path
+            if (isOutsidePath(newPosition)) {
               switch (options.addObject) {
                 case 'Cactus':
                   PLANTS.addCactus(scene, newPosition, options.cactusColor);
@@ -210,10 +289,9 @@
       }
     });
 
-    // Check if a position is outside the path
     function isOutsidePath(position) {
-      const pathCenter = new THREE.Vector2(0, 0); // Assuming path is centered at (0, 0)
-      const pathSize = new THREE.Vector2(189.28, 189.28); // Size of the path
+      const pathCenter = new THREE.Vector2(0, 0);
+      const pathSize = new THREE.Vector2(189.28, 189.28);
 
       const halfPathSize = pathSize.clone().multiplyScalar(0.5);
       const minX = pathCenter.x - halfPathSize.x;
@@ -224,7 +302,6 @@
       return (position.x < minX || position.x > maxX || position.z < minY || position.z > maxY);
     }
 
-    // TEXTURES
     const texture = new THREE.TextureLoader();
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
@@ -287,91 +364,90 @@
 
     const dirt = new THREE.Mesh(dirtgeoD, dirtmatD);
     dirt.rotation.x = -Math.PI / 2;
-    dirt.position.y = -1;
+    dirt.position.y = 0;
     dirt.name = "Dirt";
     dirt.receiveShadow = true;
     scene.add(dirt);
 
- // TREE MOVINGS
+    // TREE MOVINGS
+    const trees = [];
+    let tree;
+    let treeSelected = false;
+    const mouse = new THREE.Vector2();z
+    let selectedTree = null;
+    const originalColors = new Map();
 
-  var trees = [];
-  var tree;
-  var treeSelected = false;
-  var mouse = new THREE.Vector2();
-  var raycaster = new THREE.Raycaster();
-  var selectedTree = null;
-  var originalColors = new Map();
-
-  const loaderT = new GLTFLoader().setPath('./Models/jungle_tree/');
-  loaderT.load('scene.gltf', (gltf) => {
+    const loaderT = new GLTFLoader().setPath('./Models/jungle_tree/');
+    loaderT.load('scene.gltf', (gltf) => {
       tree = gltf.scene;
       scene.add(tree);
       tree.position.x = -1;
       trees.push(tree);
-  });
+      tree.scale.set(5, 5, 5);
+    });
 
-  function storeOriginalColors(object) {
+    function storeOriginalColors(object) {
       object.traverse((child) => {
-          if (child.isMesh) {
-              originalColors.set(child.uuid, child.material.color.clone());
-          }
+        if (child.isMesh) {
+          originalColors.set(child.uuid, child.material.color.clone());
+        }
       });
-  }
+    }
 
-  function changeColor(object, color) {
+    function changeColor(object, color) {
       object.traverse((child) => {
-          if (child.isMesh) {
-              child.material.color.set(color);
-          }
+        if (child.isMesh) {
+          child.material.color.set(color);
+        }
       });
-  }
-  function revertColors(object) {
+    }
+
+    function revertColors(object) {
       object.traverse((child) => {
-          if (child.isMesh && originalColors.has(child.uuid)) {
-              child.material.color.copy(originalColors.get(child.uuid));
-          }
+        if (child.isMesh && originalColors.has(child.uuid)) {
+          child.material.color.copy(originalColors.get(child.uuid));
+        }
       });
-  }
-  function onDocumentMouseDown(event) {
+    }
+
+    function onDocumentMouseDown(event) {
       mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
       mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
       raycaster.setFromCamera(mouse, camera);
 
       if (!treeSelected) {
-          var intersects = raycaster.intersectObject(tree, true);
+        const intersects = raycaster.intersectObject(tree, true);
 
-          if (intersects.length > 0) {
-              console.log("CLICKED TREE");
-              treeSelected = true;
-              selectedTree = tree;
+        if (intersects.length > 0) {
+          console.log("CLICKED TREE");
+          treeSelected = true;
+          selectedTree = tree;
 
-              // Store original colors and change to highlight color
-              storeOriginalColors(selectedTree);
-              changeColor(selectedTree, 0xff0000); // Change color to red
-          }
+          // Store original colors and change to highlight color
+          storeOriginalColors(selectedTree);
+          changeColor(selectedTree, 0xff0000);
+        }
       } else {
-          var intersects2 = raycaster.intersectObject(base, true);
+        const intersects2 = raycaster.intersectObject(base, true);
 
-          if (intersects2.length > 0) {
-              console.log("CLICKED BASE");
+        if (intersects2.length > 0) {
+          console.log("CLICKED BASE");
 
-              var pos = intersects2[0].point;
-              console.log("Placed!");
-              selectedTree.position.x = pos.x;
-              selectedTree.position.z = pos.z;
+          const pos = intersects2[0].point;
+          console.log("Placed!");
+          selectedTree.position.x = pos.x;
+          selectedTree.position.z = pos.z;
 
-              // Revert the color back to original
-              revertColors(selectedTree);
+          // Revert the color back to original
+          revertColors(selectedTree);
 
-              treeSelected = false;
-              selectedTree = null;
-          }
+          treeSelected = false;
+          selectedTree = null;
+        }
       }
-  }
+    }
 
-  document.addEventListener('mousedown', onDocumentMouseDown, false);
-
-
+    document.addEventListener('mousedown', onDocumentMouseDown, false);
   </script>
 </body>
 </html>
