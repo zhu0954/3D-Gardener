@@ -186,6 +186,8 @@
       PLANTS.weatherEffects(scene, rainOn, sunOn);
       if(night){
         scene.background = new THREE.Color(0x00008B);
+      } else {
+        scene.background = new THREE.Color(0x87ceeb);
       }
       if (rainOn) {
         renderer.setClearColor(0x00008B);
