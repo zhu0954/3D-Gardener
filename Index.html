@@ -22,6 +22,7 @@
       width: 100%;
       text-align: center;
     }
+
   </style>
 </head>
 <body>
@@ -65,18 +66,7 @@
       renderer.setPixelRatio(window.devicePixelRatio);
       document.body.appendChild(renderer.domElement);
 
-      /*
-      labelrenderer = new CSS2DRenderer();
-      labelrenderer.setSize(window.innerWidth, window.innerHeight);
-      labelrenderer.domElement.style.position = 'absolute';
-      labelrenderer.domElement.style.top = '0px';
-      document.body.appendChild(labelrenderer.domElement); 
-
-      labelrenderer.domElement.style.zIndex = 'top';*/
-      
-
       // CONTROLS
-      //controls = new OrbitControls(camera, labelrenderer.domElement);
       controls = new OrbitControls(camera, renderer.domElement);
       pointcontrols = new PointerLockControls( camera, document.body );
 
@@ -113,6 +103,7 @@
 
       animate();
     }
+    var lock = false;
     var fogCount = 0;
 
     function addRooftopElements() {
@@ -177,6 +168,38 @@
       scene.add(building);
     }
 
+    // GUI
+    const gui = UI.gui;
+   // gui.renderOrder = 2;
+   gui.open();
+
+    const weather = UI.weather;
+
+
+    gui.add(weather, 'RainVar').name('Rain').onChange(value => { rainOn = value });
+    gui.add(weather, 'SunVar', 0, 1).name('Heat').onChange(value => { sunOn = value });
+
+    var params = {
+		//colour: 0xB6D7A8,
+		grassAmount: 10,
+		time: 'day'
+	};
+
+    var gardencust = gui.addFolder('Garden Customisation');
+    //gardencust.addColor(params, 'colour').name("Garden Colour");
+    gardencust.add(params, 'grassAmount', 0, 40, 5).name("Grass Total").onChange(function(value){
+      GRASS.grassRandomiser(params.grassAmount,scene);
+    });
+    gardencust.add(params, 'time', ['day', 'night']).name("Time").onChange(function(value){
+      if(value == 'day'){
+        day = true;
+        night = false;
+      } else{
+        night = true;
+        day = false;
+      }
+    });
+
     function animate() {
       const delta = clock.getDelta();
       sun.visible = sunOn;
@@ -209,6 +232,8 @@
       //}
 
       if(pointcontrols.isLocked){
+        gui.close();
+        lock = true;
         if(moveForward){
           pointcontrols.moveForward(3.5);
         } else if (moveRight){
@@ -218,9 +243,11 @@
         } else if (moveLeft){
           pointcontrols.moveRight(-3.5);
         }
+      } else{
+        gui.open();
+        lock = false;
       }
 
-      //labelrenderer.render(scene, camera);
       renderer.render(scene, camera);
       //controls.update();
       requestAnimationFrame(animate);
@@ -235,7 +262,6 @@
       var width = window.innerWidth;
       var height = window.innerHeight;
       renderer.setSize(width, height);
-      //labelrenderer.setSize(width,height);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
       renderer.render(scene, camera);
@@ -294,37 +320,6 @@
     
   }
 
-    // GUI
-    const gui = UI.gui;
-   // gui.renderOrder = 2;
-   gui.open();
-    const weather = UI.weather;
-
-
-    gui.add(weather, 'RainVar').name('Rain').onChange(value => { rainOn = value });
-    gui.add(weather, 'SunVar', 0, 1).name('Heat').onChange(value => { sunOn = value });
-
-    var params = {
-		//colour: 0xB6D7A8,
-		grassAmount: 10,
-		time: 'day'
-	};
-
-    var gardencust = gui.addFolder('Garden Customisation');
-    //gardencust.addColor(params, 'colour').name("Garden Colour");
-    gardencust.add(params, 'grassAmount', 0, 40, 5).name("Grass Total").onChange(function(value){
-      GRASS.grassRandomiser(params.grassAmount,scene);
-    });
-    gardencust.add(params, 'time', ['day', 'night']).name("Time").onChange(function(value){
-      if(value == 'day'){
-        day = true;
-        night = false;
-      } else{
-        night = true;
-        day = false;
-      }
-    });
-
     //moving
 
     var moveForward = false;
@@ -376,59 +371,62 @@
 
       const intersects = raycaster.intersectObjects(scene.children, true);
 
-      if (intersects.length > 0) {
-        if (options.deleteMode) {
-          // deletion
-          for (let intersect of intersects) {
-            let target = intersect.object;
-            while (target.parent && target.parent !== scene) {
-              if (target.parent.name === "Plant") {
+      if(lock == false){
+        if (intersects.length > 0) {
+          if (options.deleteMode) {
+            // deletion
+            for (let intersect of intersects) {
+              let target = intersect.object;
+              while (target.parent && target.parent !== scene) {
+                if (target.parent.name === "Plant") {
+                  target = target.parent;
+                  break;
+                }
                 target = target.parent;
+              }
+              if (target.name === "Plant") {
+                scene.remove(target);
+                // deleting resources
+                target.traverse(node => {
+                  if (node.geometry) node.geometry.dispose();
+                  if (node.material) node.material.dispose();
+                });
                 break;
               }
-              target = target.parent;
             }
-            if (target.name === "Plant") {
-              scene.remove(target);
-              // deleting resources
-              target.traverse(node => {
-                if (node.geometry) node.geometry.dispose();
-                if (node.material) node.material.dispose();
-              });
-              break;
-            }
-          }
-        } else {
-          // Handle adding plants
-          const floorIntersect = intersects.find(intersect => intersect.object.name === "Dirt");
-          if (floorIntersect) {
-            const newPosition = floorIntersect.point;
-            if (isOutsidePath(newPosition)) {  // Check if the position is outside the path
-              switch (options.addObject) {
-                case 'Cactus':
-                  PLANTS.addCactus(scene, newPosition, options.cactusColor);
-                  break;
-                case 'Sunflower':
-                  PLANTS.addSunflower(scene, newPosition, options.sunFlowerColor);
-                  break;
-                case 'Zinnias':
-                  PLANTS.addZinnias(scene, newPosition, options.zinniasColor);
-                  break;
-                case 'Lillies':
-                  PLANTS.addLillies(scene, newPosition, options.lilliesColor);
-                  break;
-                case 'Lungwort':
-                  PLANTS.addLungwort(scene, newPosition, options.lungwortColor);
-                  break;
-                case 'Rose':
-                  PLANTS.addRose(scene, newPosition);
-                  break;
+          } else {
+            // Handle adding plants
+            const floorIntersect = intersects.find(intersect => intersect.object.name === "Dirt");
+            if (floorIntersect) {
+              const newPosition = floorIntersect.point;
+              if (isOutsidePath(newPosition)) {  // Check if the position is outside the path
+                switch (options.addObject) {
+                  case 'Cactus':
+                    PLANTS.addCactus(scene, newPosition, options.cactusColor);
+                    break;
+                  case 'Sunflower':
+                    PLANTS.addSunflower(scene, newPosition, options.sunFlowerColor);
+                    break;
+                  case 'Zinnias':
+                    PLANTS.addZinnias(scene, newPosition, options.zinniasColor);
+                    break;
+                  case 'Lillies':
+                    PLANTS.addLillies(scene, newPosition, options.lilliesColor);
+                    break;
+                  case 'Lungwort':
+                    PLANTS.addLungwort(scene, newPosition, options.lungwortColor);
+                    break;
+                  case 'Rose':
+                    PLANTS.addRose(scene, newPosition);
+                    break;
+                }
               }
             }
           }
         }
       }
-    });
+      });
+      
 
     // Check if a position is outside the path
     function isOutsidePath(position) {
@@ -512,6 +510,52 @@
     dirt.receiveShadow = true;
     scene.add(dirt);
 
+    /*
+    var handleSun = function(){
+    var sungeo = new THREE.SphereGeometry(30,30,30);
+    var sunmat = new THREE.MeshBasicMaterial({color:0xffff00});
+    var sunnysun = new THREE.Mesh(sungeo,sunmat);
+    scene.add(sunnysun);
+    sunnysun.position.set(0,120,-200);
+
+    /*var sunnylight = new THREE.AmbientLight(0xffff00, 0.1);
+    sunnysun.add(sunnylight);
+
+    var sunnyglo = new THREE.ShaderMaterial(
+      {
+        uniforms: {},
+        vertexShader: document.getElementById('vertexShader').textContent,
+        fragmentShader: document.getElementById('fragmentShader').textContent,
+        side: THREE.BackSide,
+        blending: THREE.AdditiveBlending,
+      }
+    );
+    var glowgeo = new THREE.SphereGeometry(35, 30,30);
+    var glow = new THREE.Mesh(glowgeo, sunnyglo);
+    /*scene.add(glow);
+    glow.position.set(0,120,-200);
+
+    sunnysun.add(glow);
+    glow.scale.set(1,1,1);
+  
+  //handleSun();
+
+  //var animateSun = function(){
+    var hangingPos = new THREE.Vector3(0,120,-200);
+    var comingIn = new THREE.Vector3(-50,-50,-200);
+    var goingAway = new THREE.Vector3(50,-50,-200);
+    var duration = 5;
+    var time = 0;
+
+    if(sunnysun.position == hangingPos){
+      if(time < duration){
+        time += Time.deltaTime;
+        sunnysun.position.x += 50;
+        sunnysun.position.y -= -50;
+      }
+    }
+  }
+  */
 
     var MyUpdateLoop = function (){
       //basegeo.color = new THREE.Color(params.colour);
@@ -606,7 +650,7 @@
         }
       }
   }
-
+/*
   //labels
 
   /*
