@@ -78,7 +78,7 @@
       scene.add(sun);
       scene.add(sun.target);
 
-      // Lighting
+      //Lighting
       var cameralight = new THREE.PointLight(new THREE.Color(1, 1, 1), 0.1); // Reduced intensity
       camera.add(cameralight);
       scene.add(camera);
@@ -190,7 +190,7 @@
       }
 
       renderer.render(scene, camera);
-      controls.update();
+      //controls.update();
       requestAnimationFrame(animate);
     }
 
