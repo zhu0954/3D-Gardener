@@ -31,7 +31,7 @@ export const addCactus = (mainScene, position, colour) => {
 export const addSunflower = (mainScene, position, colour) => {
     gltfLoader.load('./Models/sunflower/scene.gltf', (gltf) =>{
         gltf.scene.position.copy(position);
-        gltf.scene.rotation.y = THREE.MathUtils.degToRad(270);
+        gltf.scene.rotation.y = THREE.MathUtils.degToRad(45);
         gltf.scene.scale.set(0.1, 0.1, 0.1);
         gltf.scene.name = "Plant";
         gltf.scene.userData.type = "Sunflower";

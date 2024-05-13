@@ -42,13 +42,6 @@ gui.add(options, 'addObject', ['Sunflower', 'Cactus', 'Zinnias', 'Lillies','Lung
 gui.add(options, 'deleteMode').name('Delete Mode').onChange((enabled) =>{
     console.log("Delete Mode: " + (enabled ? "Enabled" : "Disabled"));
 })
-gui.add(options, 'showSpotlightHelper').name('Show Spotlight Helper').onChange(() => {
-    toggleSpotlightHelper();
-});
-gui.addColor(options, 'floorColor').name('Floor Color').onChange(() => {
-    const floorColor = new THREE.Color(options.floorColor);
-    materialFloor.color = floorColor;
-});
 
 export function createSpotlightControls(spotlight, spotlightControls) {
     const spotlightFolder = gui.addFolder('Spotlight');

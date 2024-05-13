@@ -25,8 +25,8 @@ export function createRain() {
   posAttr = rainGeo.getAttribute('position');
 
   rainMaterial = new THREE.PointsMaterial({
-    color: 0xaaaaaa,
-    size: 0.5,
+    color: 0x0a091f,
+    size: 0.7,
     transparent: true
   });
   rain = new THREE.Points(rainGeo,rainMaterial);
