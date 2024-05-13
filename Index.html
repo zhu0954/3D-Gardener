@@ -43,6 +43,7 @@
     import { PointerLockControls } from './jsm/controls/PointerLockControls.js';
     import { GUI } from './build/dat.gui.module.js';
     import { GLTFLoader } from './jsm/loaders/GLTFLoader.js';
+    import { CSS2DRenderer, CSS2DObject } from './jsm/renderers/CSS2DRenderer.js';
 
     let scene, camera, renderer, controls, pointcontrols, directionalLight, rain, spotlight, posAttr, floorMesh, materialFloor, sun, sunOn = false, rainOn = false;
     const options = UI.options;
@@ -62,7 +63,18 @@
       renderer.setPixelRatio(window.devicePixelRatio);
       document.body.appendChild(renderer.domElement);
 
+      /*
+      labelrenderer = new CSS2DRenderer();
+      labelrenderer.setSize(window.innerWidth, window.innerHeight);
+      labelrenderer.domElement.style.position = 'absolute';
+      labelrenderer.domElement.style.top = '0px';
+      document.body.appendChild(labelrenderer.domElement); 
+
+      labelrenderer.domElement.style.zIndex = 'top';*/
+      
+
       // CONTROLS
+      //controls = new OrbitControls(camera, labelrenderer.domElement);
       controls = new OrbitControls(camera, renderer.domElement);
       pointcontrols = new PointerLockControls( camera, document.body );
 
@@ -108,6 +120,7 @@
 
       animate();
     }
+    var fogCount = 0;
 
     function animate() {
       const delta = clock.getDelta();
@@ -116,10 +129,25 @@
       posAttr = WEATHER.animateRain();
       posAttr.needsUpdate = true;
       PLANTS.weatherEffects(scene, rainOn, sunOn);
+      if(night){
+        scene.background = new THREE.Color(0x00008B);
+      }
       if (rainOn) {
         renderer.setClearColor(0x00008B);
+        /*
+        if(fogCount == 0){
+          console.log("adding fog");
+          scene.fog = new THREE.Fog( 0xA3DEF6, 100, 200 );
+          fogCount++;
+        }
       } else {
-        renderer.setClearColor(0x87ceeb);
+        if(fogCount == 1){
+          console.log("removing fog");
+
+          fogCount--;
+          scene.fog = null;
+        }*/
+        //renderer.setClearColor(0x87ceeb);
       }
 
       if(pointcontrols.isLocked){
@@ -134,6 +162,7 @@
         }
       }
 
+      //labelrenderer.render(scene, camera);
       renderer.render(scene, camera);
       //controls.update();
       requestAnimationFrame(animate);
@@ -146,6 +175,7 @@
       var width = window.innerWidth;
       var height = window.innerHeight;
       renderer.setSize(width, height);
+      //labelrenderer.setSize(width,height);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
       renderer.render(scene, camera);
@@ -195,6 +225,8 @@
 
     // GUI
     const gui = UI.gui;
+   // gui.renderOrder = 2;
+   gui.open();
     const weather = UI.weather;
     const spotlightControls = UI.spotlightControlsConstant(spotlight);
     UI.createSpotlightControls(spotlight, spotlightControls);
@@ -205,7 +237,6 @@
     var params = {
 		//colour: 0xB6D7A8,
 		grassAmount: 10,
-		//fence: 'basic',
 		time: 'day'
 	};
 
@@ -223,14 +254,6 @@
         day = false;
       }
     });
-
-    var MyUpdateLoop = function (){
-      GRASS.grassRandomiser(params.grassAmount, scene);
-		  theTime();
-      renderer.render(scene,camera);
-      requestAnimationFrame(MyUpdateLoop);
-    };
-    MyUpdateLoop();
 
     //moving
 
@@ -419,6 +442,16 @@
     dirt.receiveShadow = true;
     scene.add(dirt);
 
+
+    var MyUpdateLoop = function (){
+      //basegeo.color = new THREE.Color(params.colour);
+      GRASS.grassRandomiser(params.grassAmount, scene);
+		  theTime();
+      renderer.render(scene,camera);
+      requestAnimationFrame(MyUpdateLoop);
+    };
+    MyUpdateLoop();
+
  // TREE MOVINGS
 
   var trees = [];
@@ -496,6 +529,19 @@
           }
       }
   }
+
+  //labels
+
+  /*
+  const earthDiv = document.createElement( 'div' );
+  earthDiv.className = 'label';
+  earthDiv.textContent = 'Earth';
+  earthDiv.style.backgroundColor = 'transparent'; */
+
+  //the div for the label
+
+
+
 
   document.addEventListener('mousedown', onDocumentMouseDown, false);
 

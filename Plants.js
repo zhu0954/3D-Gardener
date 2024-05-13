@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from './jsm/loaders/GLTFLoader.js';
+import { CSS2DRenderer, CSS2DObject } from './jsm/renderers/CSS2DRenderer.js';
 
 const gltfLoader = new GLTFLoader()
 
@@ -51,6 +52,19 @@ export const addSunflower = (mainScene, position, colour) => {
 
         // console.log(gltf.scene)
         mainScene.add(gltf.scene);
+
+        /*
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'label';
+        nameDiv.textContent = 'Sunflower';
+        nameDiv.style.backgroundColor = 'grey';
+
+
+      
+        const nameLabel = new CSS2DObject (nameDiv);
+        nameLabel.position.set(0,120,80);
+        gltf.scene.add(nameLabel);*/
+        //labelrenderer.render(mainScene,camera);
     })
 }
 
