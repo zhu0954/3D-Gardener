@@ -184,13 +184,13 @@
       posAttr = WEATHER.animateRain();
       posAttr.needsUpdate = true;
       PLANTS.weatherEffects(scene, rainOn, sunOn);
-      if(night){
-        scene.background = new THREE.Color(0x00008B);
-      } else {
-        scene.background = new THREE.Color(0x87ceeb);
+      
+
+      if(rainOn){
+        renderer.setClearColor(0x536878);
+      } else{
+        renderer.setClearColor(0x87ceeb);
       }
-      if (rainOn) {
-        renderer.setClearColor(0x00008B);
         /*
         if(fogCount == 0){
           console.log("adding fog");
@@ -206,7 +206,7 @@
           scene.fog = null;
         }*/
         //renderer.setClearColor(0x87ceeb);
-      }
+      //}
 
       if(pointcontrols.isLocked){
         if(moveForward){
@@ -225,6 +225,8 @@
       //controls.update();
       requestAnimationFrame(animate);
     }
+
+    
 
     init();
     renderer.setClearColor(0x87ceeb);
@@ -251,11 +253,12 @@
   sun2.shadow.mapSize.width = 1024; 
   sun2.shadow.mapSize.height = 1024;
   sun2.shadow.camera.near = 0.5; 
-  sun2.shadow.camera.far = 500;
-  sun2.shadow.camera.left = -100;
-  sun2.shadow.camera.right = 100;
-  sun2.shadow.camera.top = 100;
-  sun2.shadow.camera.bottom = -100;
+  sun2.shadow.camera.far = 750;
+  sun2.shadow.camera.left = -200;
+  sun2.shadow.camera.right = 200;
+  sun2.shadow.camera.top = 250;
+  sun2.shadow.camera.bottom = -250;
+
 
   const moon = new THREE.PointLight(0x4D7DDD, 0.5);
   moon.position.set(50, 80, 50);
@@ -285,6 +288,7 @@
       }
       scene.add(ambientLight2);
       scene.add(moon);
+      renderer.setClearColor(0x000000); 
       count++;
     }
     
@@ -533,7 +537,14 @@
       scene.add(tree);
       tree.scale.set(5, 5, 5);
       tree.position.x = -1;
-      tree.castShadow = true; // Enable shadow casting for the tree
+      gltf.scene.traverse((node) => 
+      {
+        if (node.isMesh)
+        {
+          node.castShadow = true;
+        }
+      });
+
       trees.push(tree);
     });
 
