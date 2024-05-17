@@ -50,7 +50,6 @@ export const addSunflower = (mainScene, position, colour) => {
         }
         });
 
-        // console.log(gltf.scene)
         mainScene.add(gltf.scene);
 
         /*
@@ -174,71 +173,71 @@ export const addLungwort = (mainScene, position, colour) => {
 }
 
 export function weatherEffects (mainScene, rainOn, sunOn) {
-    let toRemove = []; // hold objects to remove
+  let toRemove = []; // hold objects to remove
 
-      mainScene.traverse((object) => {
-        if (object.name === "Plant"){
-          if (rainOn) {
-                object.value += (object.userData.type === "Sunflower" || object.userData.type === "Cactus") ? -0.1 : 0.1;
-            }
-            if (sunOn) {
-                object.value += (object.userData.type === "Sunflower" || object.userData.type === "Cactus") ? 0.1 : -0.1;
-            }
-          console.log(object.value);
-          //normalize it so its only from 0 - 100
-          object.value = Math.max(0, Math.min(100, object.value));
-          
-          //grows the flower
-          if(object.value > 50){
-            let scaleIncrement = (object.value - 50) / 50;
-            let newScale = object.originalScale.clone().multiplyScalar(1 + scaleIncrement * 0.25);
-            object.scale.set(newScale.x, newScale.y, newScale.z);
+  mainScene.traverse((object) => {
+    if (object.name === "Plant"){
+      if (rainOn) {
+        object.value += (object.userData.type === "Sunflower" || object.userData.type === "Cactus") ? -0.1 : 0.1;
+      }
+      if (sunOn) {
+        object.value += (object.userData.type === "Sunflower" || object.userData.type === "Cactus") ? 0.1 : -0.1;
+      }
+      console.log(object.value);
+      //normalize it so its only from 0 - 100
+      object.value = Math.max(0, Math.min(100, object.value));
+
+      //grows the flower
+      if(object.value > 50){
+        let scaleIncrement = (object.value - 50) / 50;
+        let newScale = object.originalScale.clone().multiplyScalar(1 + scaleIncrement * 0.25);
+        object.scale.set(newScale.x, newScale.y, newScale.z);
+      } else {
+        object.scale.set(object.originalScale.x, object.originalScale.y, object.originalScale.z);
+      }
+
+      object.traverse((node) => {
+        if (node.isMesh) { 
+          if (object.value < 20 && object.value > 0) {
+            node.material.color.set(0xFF0000); // Set to brown
           } else {
-            object.scale.set(object.originalScale.x, object.originalScale.y, object.originalScale.z);
+            node.material.color.set(0xFFFFFF); // Set to default colour
           }
-
-          object.traverse((node) => {
-            if (node.isMesh) { 
-              if (object.value < 20 && object.value > 0) {
-                node.material.color.set(0xFF0000); // Set to brown
-            } else {
-              node.material.color.set(0xFFFFFF); // Set to default colour
-            }
-          }
-        });
-
-        if(object.value <= 0){
-          toRemove.push(object);
         }
-
-        // LILY
-        if (object.userData.type === "Lily" && rainOn) {
-          object.position.y += 0.01;  // Move up slightly when it rains
-          // limit the movement 
-          object.position.y = Math.min(object.position.y, object.originalPosition.y + 1);
-        } else if (object.userData.type === "Lily" && sunOn) {
-          //reset position
-          object.position.y = Math.max(object.originalPosition.y, object.position.y - 0.01);
-        }
-
-        //Zinnias
-        if (object.userData.type === "Zinnias" && rainOn) {
-          object.position.y += 0.01;  // Move up slightly when it rains
-          object.position.y = Math.min(object.position.y, object.originalPosition.y + 5);
-        } else if (object.userData.type === "Zinnias" && sunOn) {
-          //reset position
-          object.position.y = Math.max(object.originalPosition.y, object.position.y - 0.01);
-        }
-      } 
-    });
-
-      // Remove objects
-      toRemove.forEach((object) => {
-        mainScene.remove(object);
-        if (object.geometry) object.geometry.dispose();
-        if (object.material) {
-          if (object.material.map) object.material.map.dispose(); 
-            object.material.dispose(); // Dispose material
-          }
       });
+
+      if(object.value <= 0){
+        toRemove.push(object);
+      }
+
+      // LILY
+      if (object.userData.type === "Lily" && rainOn) {
+        object.position.y += 0.01;  // Move up slightly when it rains
+        // limit the movement 
+        object.position.y = Math.min(object.position.y, object.originalPosition.y + 1);
+      } else if (object.userData.type === "Lily" && sunOn) {
+      //reset position
+        object.position.y = Math.max(object.originalPosition.y, object.position.y - 0.01);
+      }
+
+      //Zinnias
+      if (object.userData.type === "Zinnias" && rainOn) {
+        object.position.y += 0.01;  // Move up slightly when it rains
+        object.position.y = Math.min(object.position.y, object.originalPosition.y + 5);
+      } else if (object.userData.type === "Zinnias" && sunOn) {
+      //reset position
+        object.position.y = Math.max(object.originalPosition.y, object.position.y - 0.01);
+      }
+    } 
+  });
+
+    // Remove objects
+  toRemove.forEach((object) => {
+    mainScene.remove(object);
+    if (object.geometry) object.geometry.dispose();
+      if (object.material) {
+        if (object.material.map) object.material.map.dispose(); 
+          object.material.dispose(); // Dispose material
+      }
+  });
 }
