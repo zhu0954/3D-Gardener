@@ -3,6 +3,8 @@ import { GLTFLoader } from './jsm/loaders/GLTFLoader.js';
 
 // TEXTURES
 var base;
+var path;
+var dirt;
 
 function baseCreator(scene) {
     const texture = new THREE.TextureLoader();
@@ -52,12 +54,16 @@ function pathCreator(scene) {
         side: THREE.DoubleSide,
     });
 
-    const path = new THREE.Mesh(pathgeoS, pathmatS);
+    path = new THREE.Mesh(pathgeoS, pathmatS);
     path.rotation.x = -Math.PI / 2;
     path.position.y = 0.5;
     path.receiveShadow = true;
     path.name = "Path"
     scene.add(path);
+}
+
+export function getPath(){
+    return path;
 }
 
 function dirtCreator(scene) {
@@ -77,12 +83,16 @@ function dirtCreator(scene) {
         side: THREE.DoubleSide,
     });
 
-    const dirt = new THREE.Mesh(dirtgeoD, dirtmatD);
+    dirt = new THREE.Mesh(dirtgeoD, dirtmatD);
     dirt.rotation.x = -Math.PI / 2;
     dirt.position.y = 0;
     dirt.name = "Dirt";
     dirt.receiveShadow = true;
     scene.add(dirt);
+}
+
+export function getDirt(){
+    return dirt;
 }
 
 export function gardenCreator(scene) {

@@ -1,8 +1,14 @@
 import * as THREE from 'three';
+var building;
+var frontEdge;
+var backEdge;
+var leftEdge;
+var rightEdge;
 
 export function addRooftopElements(scene) {
     const textureLoader = new THREE.TextureLoader();
 
+    /*
     // Adding dirt surface
     const colorTexD = textureLoader.load('textures/dirt/Ground048_4K-JPG_Color.jpg');
     const dispTexD = textureLoader.load('textures/dirt/Ground048_4K-JPG_Displacement.jpg');
@@ -25,45 +31,66 @@ export function addRooftopElements(scene) {
     dirt.name = "Dirt";
     dirt.receiveShadow = true;
     scene.add(dirt);
-
+*/
     // Adding rooftop edges
     const edgeGeo = new THREE.BoxGeometry(260, 10, 5);
     const edgeMat = new THREE.MeshStandardMaterial({ color: 0x555555 });
 
-    const frontEdge = new THREE.Mesh(edgeGeo, edgeMat);
+    frontEdge = new THREE.Mesh(edgeGeo, edgeMat);
     frontEdge.position.set(0, 5, -127.5);
     frontEdge.receiveShadow = true;
     scene.add(frontEdge);
 
-    const backEdge = new THREE.Mesh(edgeGeo, edgeMat);
+    backEdge = new THREE.Mesh(edgeGeo, edgeMat);
     backEdge.position.set(0, 5, 127.5);
     backEdge.receiveShadow = true;
     scene.add(backEdge);
 
     const sideGeo = new THREE.BoxGeometry(5, 10, 250);
-    const leftEdge = new THREE.Mesh(sideGeo, edgeMat);
+    leftEdge = new THREE.Mesh(sideGeo, edgeMat);
     leftEdge.position.set(-127.5, 5, 0);
     leftEdge.receiveShadow = true;
     scene.add(leftEdge);
 
-    const rightEdge = new THREE.Mesh(sideGeo, edgeMat);
+    rightEdge = new THREE.Mesh(sideGeo, edgeMat);
     rightEdge.position.set(127.5, 5, 0);
     rightEdge.receiveShadow = true;
     scene.add(rightEdge);
+}
 
+export function getFrontEdge(){
+    return frontEdge;
+}
+
+export function getBackEdge(){
+    return backEdge;
+}
+
+export function getRightEdge(){
+    return rightEdge;
+}
+
+export function getLeftEdge(){
+    return leftEdge;
 }
 
 export function addBuilding(scene) {
-    const buildingGeo = new THREE.BoxGeometry(250, 400, 250);
-    const buildingMat = new THREE.MeshStandardMaterial({ color: 0x888888 });
+    var buildingGeo = new THREE.BoxGeometry(250, 400, 250);
+   const buildingMat = new THREE.MeshStandardMaterial({ color: 0x888888 });
+    
     var buildingTexture = new THREE.TextureLoader().load('textures/BrickBuilding.jpg');
     buildingMat.map = buildingTexture;
     buildingTexture.wrapS = buildingTexture.wrapT = THREE.RepeatWrapping;
     buildingTexture.repeat = new THREE.Vector2(2, 1);
-    const building = new THREE.Mesh(buildingGeo, buildingMat);
+    
+    building = new THREE.Mesh(buildingGeo, buildingMat);
     building.position.set(0, -200, 0);
     building.receiveShadow = true;
     scene.add(building);
+}
+
+export function getBuilding(){
+    return building;
 }
 
 export function naturalLight() {

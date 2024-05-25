@@ -50,7 +50,8 @@
     import { CSS2DRenderer, CSS2DObject } from './jsm/renderers/CSS2DRenderer.js';
 
     let scene, camera, renderer, controls, pointcontrols, floorMesh, materialFloor, naturalLight = [],
-    base, time = "day", heat, rain, posAttr, sunPower = 0, rainPower = 0;
+    base, path, dirt, building, frontEdge, backEdge, leftEdge, rightEdge, time = "day", heat, rain, posAttr,
+    sunPower = 0, rainPower = 0;
     const flowerOptions = UI.flowerOptions;
     const grassOptions = UI.grassOptions;
     const clock = new THREE.Clock();  // Define clock here
@@ -107,15 +108,25 @@
       // Create Garden
       GRASS.gardenCreator(scene);
       base = GRASS.getBase();
+      dirt = GRASS.getDirt();
+      path = GRASS.getPath();
 
       // Adding building underneath
       ENV.addRooftopElements(scene);
       ENV.addBuilding(scene);
 
+      building = ENV.getBuilding();
+      frontEdge = ENV.getFrontEdge();
+      backEdge = ENV.getBackEdge();
+      rightEdge = ENV.getRightEdge();
+      leftEdge = ENV.getLeftEdge();
+
       animate();
     }
     var lock = false;
     var fogCount = 0;
+
+
 
     // GUI
     const gui = UI.gui;
@@ -129,11 +140,46 @@
     gui.add(weather, 'SunVar', 0, 100).name('Heat').onChange(value => { sunPower = value });
 
     var gardencust = gui.addFolder('Garden Customisation');
-    //gardencust.addColor(params, 'colour').name("Garden Colour");
+
     gardencust.add(grassOptions, 'grassAmount', 0, 40, 5).name("Grass Total").onChange(function(value){
       GRASS.grassRandomiser(grassOptions.grassAmount,scene);
     });
     gardencust.add(grassOptions, 'time', ['day', 'night']).name("Time").onChange(value => {time = value});
+
+    gardencust.add(grassOptions,'baseSizeX', 0,20,2).name("Garden Length").onChange(function(value){
+      updateBase(grassOptions.baseSizeX, grassOptions.baseSizeZ);
+    });
+    gardencust.add(grassOptions,'baseSizeZ', 0,20,2).name("Garden Width").onChange(function(value){
+      updateBase(grassOptions.baseSizeX, grassOptions.baseSizeZ);
+    });
+
+    gardencust.open();
+
+    var updateBase = function(sizeX, sizeZ){
+      const newBaseGeo = new THREE.PlaneGeometry((sizeX * 10) + 142.86, (sizeZ * 10) + 142.86);
+      base.geometry = newBaseGeo;
+
+      const newPathGeo = new THREE.PlaneGeometry((sizeX * 10) + 189.28, (sizeZ * 10) + 189.28);
+      path.geometry = newPathGeo;
+
+      const newDirtGeo = new THREE.PlaneGeometry((sizeX * 10) + 250, (sizeZ * 10) + 250);
+      dirt.geometry = newDirtGeo;
+
+      const newBuildingGeo = new THREE.BoxGeometry((sizeX * 10) + 250, 400, (sizeZ * 10) + 250);
+      building.geometry = newBuildingGeo;
+
+      const newEdgeGeo = new THREE.BoxGeometry((sizeX * 10) + 260, 10, 5);
+      const newSideGeo = new THREE.BoxGeometry(5, 10, (sizeZ * 10) + 250);
+      frontEdge.geometry = newEdgeGeo;
+      backEdge.geometry = newEdgeGeo;
+      rightEdge.geometry = newSideGeo;
+      leftEdge.geometry = newSideGeo;
+
+      leftEdge.position.set(-(sizeX * 10) /2 + - 127.5, 5, 0);
+      rightEdge.position.set((sizeX * 10) /2 + 127.5, 5, 0);
+      frontEdge.position.set(0, 5, -(sizeZ * 10) / 2 + - 127.5);
+      backEdge.position.set(0, 5, (sizeZ * 10) / 2 + 127.5);
+    }
 
     function animate() {
       const delta = clock.getDelta();
@@ -150,24 +196,6 @@
 
       GRASS.grassRandomiser(grassOptions.grassAmount, scene);
 		  ENV.theTime(time, naturalLight, renderer, rainPower);
-
-      
-        /*
-        if(fogCount == 0){
-          console.log("adding fog");
-          scene.fog = new THREE.Fog( 0xA3DEF6, 100, 200 );
-          fogCount++;
-        }
-        renderer.setClearColor(0x4c4b5c);
-      } else {
-        if(fogCount == 1){
-          console.log("removing fog");
-
-          fogCount--;
-          scene.fog = null;
-        }*/
-        //renderer.setClearColor(0x87ceeb);
-      //}
 
       if(pointcontrols.isLocked){
         gui.close();
@@ -316,63 +344,26 @@
     // Check if a position is outside the path
     function isOutsidePath(position) {
       const pathCenter = new THREE.Vector2(0, 0); 
-      const pathSize = new THREE.Vector2(189.28, 189.28); // Size of the path
+      //const pathSize = new THREE.Vector2(189.28, 189.28); // Size of the path
+      const pathSizeX = (grassOptions.baseSizeX * 10) + 189.28;
+      const pathSizeZ = (grassOptions.baseSizeZ * 10) + 189.28;
 
-      const halfPathSize = pathSize.clone().multiplyScalar(0.5);
+      /*const halfPathSize = pathSize.clone().multiplyScalar(0.5);
       const minX = pathCenter.x - halfPathSize.x;
       const maxX = pathCenter.x + halfPathSize.x;
       const minY = pathCenter.y - halfPathSize.y;
-      const maxY = pathCenter.y + halfPathSize.y;
+      const maxY = pathCenter.y + halfPathSize.y;*/
+
+      const halfPathSizeX = pathSizeX / 2;
+      const halfPathSizeZ = pathSizeZ / 2;
+      const minX = pathCenter.x - halfPathSizeX;
+      const maxX = pathCenter.x + halfPathSizeX;
+      const minY = pathCenter.y - halfPathSizeZ;
+      const maxY = pathCenter.y + halfPathSizeZ;
 
       return (position.x < minX || position.x > maxX || position.z < minY || position.z > maxY);
     }
-
-    /*
-    var handleSun = function(){
-    var sungeo = new THREE.SphereGeometry(30,30,30);
-    var sunmat = new THREE.MeshBasicMaterial({color:0xffff00});
-    var sunnysun = new THREE.Mesh(sungeo,sunmat);
-    scene.add(sunnysun);
-    sunnysun.position.set(0,120,-200);
-
-    /*var sunnylight = new THREE.AmbientLight(0xffff00, 0.1);
-    sunnysun.add(sunnylight);
-
-    var sunnyglo = new THREE.ShaderMaterial(
-      {
-        uniforms: {},
-        vertexShader: document.getElementById('vertexShader').textContent,
-        fragmentShader: document.getElementById('fragmentShader').textContent,
-        side: THREE.BackSide,
-        blending: THREE.AdditiveBlending,
-      }
-    );
-    var glowgeo = new THREE.SphereGeometry(35, 30,30);
-    var glow = new THREE.Mesh(glowgeo, sunnyglo);
-    /*scene.add(glow);
-    glow.position.set(0,120,-200);
-
-    sunnysun.add(glow);
-    glow.scale.set(1,1,1);
   
-  //handleSun();
-
-  //var animateSun = function(){
-    var hangingPos = new THREE.Vector3(0,120,-200);
-    var comingIn = new THREE.Vector3(-50,-50,-200);
-    var goingAway = new THREE.Vector3(50,-50,-200);
-    var duration = 5;
-    var time = 0;
-
-    if(sunnysun.position == hangingPos){
-      if(time < duration){
-        time += Time.deltaTime;
-        sunnysun.position.x += 50;
-        sunnysun.position.y -= -50;
-      }
-    }
-  }
-  */
  // TREE MOVINGS
 
     var trees = [];

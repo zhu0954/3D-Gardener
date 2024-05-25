@@ -25,7 +25,9 @@ export const flowerOptions = {
 export const grassOptions = {
     //colour: 0xB6D7A8,
     grassAmount: 10,
-    time: 'day'
+    time: 'day',
+    baseSizeX: 0,
+    baseSizeZ: 0
 };
 
 export const weather = {
