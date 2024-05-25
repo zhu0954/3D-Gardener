@@ -174,31 +174,29 @@ export const addLungwort = (mainScene, position, colour) => {
 
 export function weatherEffects (mainScene, rainOn, sunOn) {
   let toRemove = []; // hold objects to remove
+  var sunRate = 0.2 * sunOn / 100;
+  var rainRate = 0.2 * rainOn / 100;
 
   mainScene.traverse((object) => {
     if (object.name === "Plant"){
       if (rainOn) {
-        object.value += (object.userData.type === "Sunflower" || object.userData.type === "Cactus") ? -0.1 : 0.1;
+        object.value += (object.userData.type === "Sunflower" || object.userData.type === "Cactus") ? -rainRate : rainRate;
       }
       if (sunOn) {
-        object.value += (object.userData.type === "Sunflower" || object.userData.type === "Cactus") ? 0.1 : -0.1;
+        object.value += (object.userData.type === "Sunflower" || object.userData.type === "Cactus") ? sunRate : -sunRate;
       }
-      console.log(object.value);
-      //normalize it so its only from 0 - 100
+      // console.log(object.value);
+      // normalize it so its only from 0 - 100
       object.value = Math.max(0, Math.min(100, object.value));
 
-      //grows the flower
-      if(object.value > 50){
-        let scaleIncrement = (object.value - 50) / 50;
-        let newScale = object.originalScale.clone().multiplyScalar(1 + scaleIncrement * 0.25);
-        object.scale.set(newScale.x, newScale.y, newScale.z);
-      } else {
-        object.scale.set(object.originalScale.x, object.originalScale.y, object.originalScale.z);
-      }
+      // grows/shrinks the flower
+      let scaleIncrement = (object.value - 50) / 50;
+      let newScale = object.originalScale.clone().multiplyScalar(1 + scaleIncrement * 0.25);
+      object.scale.set(newScale.x, newScale.y, newScale.z);
 
       object.traverse((node) => {
         if (node.isMesh) { 
-          if (object.value < 20 && object.value > 0) {
+          if (object.value < 20) {
             node.material.color.set(0xFF0000); // Set to brown
           } else {
             node.material.color.set(0xFFFFFF); // Set to default colour
@@ -210,23 +208,25 @@ export function weatherEffects (mainScene, rainOn, sunOn) {
         toRemove.push(object);
       }
 
-      // LILY
+      // Lillies
       if (object.userData.type === "Lily" && rainOn) {
-        object.position.y += 0.01;  // Move up slightly when it rains
+        object.position.y += 0.01 * rainRate/0.2; // Move up slightly when it rains
         // limit the movement 
-        object.position.y = Math.min(object.position.y, object.originalPosition.y + 1);
+        object.position.y = Math.min(object.position.y, object.originalPosition.y + 2.5);
       } else if (object.userData.type === "Lily" && sunOn) {
-      //reset position
-        object.position.y = Math.max(object.originalPosition.y, object.position.y - 0.01);
+        object.position.y -= 0.006 * sunRate/0.2; // Move up slightly when its sunny
+        // limit the movement
+        object.position.y = Math.max(object.position.y, object.originalPosition.y - 1.5);  
       }
 
-      //Zinnias
+      // Zinnias
       if (object.userData.type === "Zinnias" && rainOn) {
-        object.position.y += 0.01;  // Move up slightly when it rains
+        object.position.y += 0.02 * rainRate/0.2; // Move up slightly when it rains
         object.position.y = Math.min(object.position.y, object.originalPosition.y + 5);
       } else if (object.userData.type === "Zinnias" && sunOn) {
-      //reset position
-        object.position.y = Math.max(object.originalPosition.y, object.position.y - 0.01);
+        object.position.y -= 0.02 * sunRate/0.2; // Move up slightly when its sunny
+        // limit the movement
+        object.position.y = Math.max(object.position.y, object.originalPosition.y - 5);  
       }
     } 
   });
