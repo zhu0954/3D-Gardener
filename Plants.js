@@ -1,19 +1,20 @@
+// Plants.js
 import * as THREE from 'three';
 import { GLTFLoader } from './jsm/loaders/GLTFLoader.js';
 import { CSS2DRenderer, CSS2DObject } from './jsm/renderers/CSS2DRenderer.js';
 
 const gltfLoader = new GLTFLoader()
 
-//Function of cactus
+// Function of cactus
 export const addCactus = (mainScene, position, colour) => {
     gltfLoader.load('./Models/cactus_1/scene.gltf', (gltf) => {
       gltf.scene.position.copy(position);
       gltf.scene.name = "Plant";
       gltf.scene.userData.type = "Cactus";
       gltf.scene.value = 50; 
-      gltf.scene.originalScale = new THREE.Vector3(1, 1, 1); 
+      gltf.scene.originalScale = new THREE.Vector3(2, 2, 2); // Updated scale
 
-      //shadows
+      // shadows
       gltf.scene.traverse((node) => 
       {
         if (node.isMesh)
@@ -22,25 +23,24 @@ export const addCactus = (mainScene, position, colour) => {
           node.material.color.set(colour);
         }
       });
+      gltf.scene.scale.set(2, 2, 2); // Apply updated scale
       mainScene.add(gltf.scene);
     });
 };
 
-//Creates Sunflower
-//sunflowers thrive on extreme heat
+// Creates Sunflower
+// sunflowers thrive on extreme heat
 export const addSunflower = (mainScene, position, colour) => {
     gltfLoader.load('./Models/sunflower/scene.gltf', (gltf) =>{
         gltf.scene.position.copy(position);
         gltf.scene.rotation.y = THREE.MathUtils.degToRad(45);
-        gltf.scene.scale.set(0.1, 0.1, 0.1);
+        gltf.scene.scale.set(0.2, 0.2, 0.2); // Updated scale
         gltf.scene.name = "Plant";
         gltf.scene.userData.type = "Sunflower";
         gltf.scene.value = 50; 
-        //original Scale for rain
-        gltf.scene.originalScale = new THREE.Vector3(0.1, 0.1, 0.1); 
+        gltf.scene.originalScale = new THREE.Vector3(0.2, 0.2, 0.2); // Updated scale
 
-
-        //shadows
+        // shadows
         gltf.scene.traverse((node) => 
         {
         if (node.isMesh)
@@ -51,36 +51,22 @@ export const addSunflower = (mainScene, position, colour) => {
         });
 
         mainScene.add(gltf.scene);
-
-        /*
-        const nameDiv = document.createElement('div');
-        nameDiv.className = 'label';
-        nameDiv.textContent = 'Sunflower';
-        nameDiv.style.backgroundColor = 'grey';
-
-
-      
-        const nameLabel = new CSS2DObject (nameDiv);
-        nameLabel.position.set(0,120,80);
-        gltf.scene.add(nameLabel);*/
-        //labelrenderer.render(mainScene,camera);
     })
-}
+};
 
-//Creates Zinnias
+// Creates Zinnias
 export const addZinnias = (mainScene, position, colour)=> {
     gltfLoader.load('./Models/Zinnias/scene.gltf', (gltf) =>{
       gltf.scene.position.copy(position);
-      gltf.scene.position.y += 22
-      gltf.scene.scale.set(0.25, 0.25, 0.25);
+      gltf.scene.position.y += 45; // Adjusted position to keep the tip above the dirt
+      gltf.scene.scale.set(0.5, 0.5, 0.5); // Updated scale
       gltf.scene.name = "Plant";
       gltf.scene.userData.type = "Zinnias";
-      gltf.scene.originalPosition = new THREE.Vector3(position.x, position.y + 22, position.z);  // Store original position
+      gltf.scene.originalPosition = new THREE.Vector3(position.x, position.y + 45, position.z);  // Store original position
       gltf.scene.value = 50; 
-      //original Scale for rain
-      gltf.scene.originalScale = new THREE.Vector3(0.25, 0.25, 0.25); 
+      gltf.scene.originalScale = new THREE.Vector3(0.5, 0.5, 0.5); // Updated scale
 
-      //shadows
+      // shadows
       gltf.scene.traverse((node) => 
       {
         if (node.isMesh)
@@ -92,22 +78,21 @@ export const addZinnias = (mainScene, position, colour)=> {
 
       mainScene.add(gltf.scene);
     });
-}
+};
 
-//Create lilies
-//extreme rain
+// Create lilies
 export const addLillies = (mainScene, position, colour)=> {
   gltfLoader.load('./Models/purple_lilies/scene.gltf', (gltf) =>{
     gltf.scene.position.copy(position);
-    gltf.scene.position.y += 8.25
+    gltf.scene.position.y += 16.5; // Adjusted position to keep the tip above the dirt
     gltf.scene.name = "Plant";
     gltf.scene.userData.type = "Lily";  
     gltf.scene.value = 50;
-    gltf.scene.originalScale = new THREE.Vector3(1, 1, 1);
-    //original Position
-    gltf.scene.originalPosition = new THREE.Vector3(position.x, position.y + 8.25, position.z); 
+    gltf.scene.scale.set(2, 2, 2); // Updated scale
+    gltf.scene.originalScale = new THREE.Vector3(2, 2, 2); // Updated scale
+    gltf.scene.originalPosition = new THREE.Vector3(position.x, position.y + 16.5, position.z); 
 
-    //shadows
+    // shadows
     gltf.scene.traverse((node) => 
     {
       if (node.isMesh)
@@ -119,9 +104,9 @@ export const addLillies = (mainScene, position, colour)=> {
 
     mainScene.add(gltf.scene);
   });
-}
+};
 
-//Create Rose
+// Create Rose
 export const addRose = (mainScene, position, colour)=> {
     gltfLoader.load('./Models/rose_flower/scene.gltf', (gltf) =>{
       gltf.scene.position.copy(position);
@@ -129,10 +114,10 @@ export const addRose = (mainScene, position, colour)=> {
       gltf.scene.name = "Plant";
       gltf.scene.userData.type = "Rose";
       gltf.scene.value = 50;
-      gltf.scene.scale.set(2.5, 2.5, 2.5);
-      gltf.scene.originalScale = new THREE.Vector3(2.5, 2.5, 2.5);
+      gltf.scene.scale.set(5, 5, 5); // Updated scale
+      gltf.scene.originalScale = new THREE.Vector3(5, 5, 5); // Updated scale
 
-      //shadows
+      // shadows
       gltf.scene.traverse((node) => 
       {
         if (node.isMesh)
@@ -144,21 +129,19 @@ export const addRose = (mainScene, position, colour)=> {
 
       mainScene.add(gltf.scene);
     });
-}
+};
 
-//Create Lungwort
-//rain
+// Create Lungwort
 export const addLungwort = (mainScene, position, colour) => {
   gltfLoader.load('./Models/Lungwort/scene.gltf', (gltf) =>{
     gltf.scene.position.copy(position);
-    gltf.scene.scale.set(20,20,20);
+    gltf.scene.scale.set(40, 40, 40); // Updated scale
     gltf.scene.name = "Plant";
     gltf.scene.userData.type = "Lungwort";
     gltf.scene.value = 50; 
-    //original Scale for rain
-    gltf.scene.originalScale = new THREE.Vector3(20, 20, 20); 
+    gltf.scene.originalScale = new THREE.Vector3(40, 40, 40); // Updated scale
 
-    //shadows
+    // shadows
     gltf.scene.traverse((node) => 
     {
       if (node.isMesh)
