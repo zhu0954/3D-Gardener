@@ -224,3 +224,21 @@ export function weatherEffects (mainScene, rainOn, sunOn) {
       }
   });
 }
+
+  export function removeAllPlants(mainScene) {
+    let toRemove = []; // hold objects to remove
+    mainScene.traverse((object) => {
+      if (object.name === "Plant"){
+        toRemove.push(object);
+      }
+    });
+
+    toRemove.forEach((object) => {
+      mainScene.remove(object);
+      if (object.geometry) object.geometry.dispose();
+        if (object.material) {
+          if (object.material.map) object.material.map.dispose(); 
+            object.material.dispose(); // Dispose material
+        }
+    });
+  }

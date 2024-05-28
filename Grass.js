@@ -106,17 +106,38 @@ export function gardenCreator(scene) {
 var grassTotal = 0; //total grass
 var grasses = []; //array of grass in the scene
 
+var sizeX = 125;
+var sizeZ = 125;
+
+export function updateGrass(baseSizeX, baseSizeZ){
+    sizeX = baseSizeX;
+    sizeZ = baseSizeZ;
+    console.log("baseX: " + baseSizeX);
+}
+
 var addGrass = function(mainScene) {
     const loader = new GLTFLoader().setPath('Models/realistics_grass_03/');
     loader.load('scene.gltf', (gltf) => {
         const grass = gltf.scene;
         mainScene.add(grass);
         grass.scale.set(5, 5, 5);
-        var posx = Math.random() * 125 - 65.5;
-        var posy = Math.random() * 125 - 65.5;
+        var posx87 = sizeX * 0.8745;
+        var posz87 = sizeZ * 0.8745;
+        var posx = Math.random() * posx87 - (posx87/2);
+        var posy = Math.random() * posz87 - (posz87/2);
+        //var posx = Math.random() * 125 - 65.5;
+        //var posy = Math.random() * 125 - 65.5;
         grass.position.set(posx,0.25,posy);
         grasses.push(grass);
     })
+}
+
+export function removeAllGrass(mainScene) {
+    while(grasses.length > 0){
+        var removing = grasses.pop();
+        mainScene.remove(removing);
+        grassTotal--;
+    }
 }
 
 //randomise grass & handles adding/removing them

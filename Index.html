@@ -155,7 +155,12 @@
 
     gardencust.open();
 
+
+    var baseSizeX = grassOptions.baseSizeX;
+    var baseSizeZ = grassOptions.baseSizeZ;
+
     var updateBase = function(sizeX, sizeZ){
+
       const newBaseGeo = new THREE.PlaneGeometry((sizeX * 10) + 142.86, (sizeZ * 10) + 142.86);
       base.geometry = newBaseGeo;
 
@@ -179,9 +184,22 @@
       rightEdge.position.set((sizeX * 10) /2 + 127.5, 5, 0);
       frontEdge.position.set(0, 5, -(sizeZ * 10) / 2 + - 127.5);
       backEdge.position.set(0, 5, (sizeZ * 10) / 2 + 127.5);
+
+      baseSizeX = ((sizeX * 10) + 142.86);
+      baseSizeZ = ((sizeZ * 10) + 142.86);
+
+      GRASS.updateGrass(baseSizeX, baseSizeZ);
     }
 
     function animate() {
+
+      if(baseSizeX != grassOptions.baseSizeX || baseSizeZ != grassOptions.baseSizeZ){
+        //remove plants and grass from plane
+        PLANTS.removeAllPlants(scene);
+        GRASS.removeAllGrass(scene);
+        baseSizeX = grassOptions.baseSizeX
+        baseSizeZ = grassOptions.baseSizeZ
+      }
       const delta = clock.getDelta();
       heat.intensity = sunPower/20;
       rain.visible = rainPower ? true : false;
