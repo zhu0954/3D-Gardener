@@ -47,7 +47,6 @@
     import { PointerLockControls } from './jsm/controls/PointerLockControls.js';
     import { GUI } from './build/dat.gui.module.js';
     import { GLTFLoader } from './jsm/loaders/GLTFLoader.js';
-    import { CSS2DRenderer, CSS2DObject } from './jsm/renderers/CSS2DRenderer.js';
 
     let scene, camera, renderer, controls, pointcontrols, floorMesh, materialFloor, naturalLight = [],
     base, path, dirt, building, frontEdge, backEdge, leftEdge, rightEdge, time = "day", heat, rain, posAttr,
@@ -130,7 +129,6 @@
 
     // GUI
     const gui = UI.gui;
-    // gui.renderOrder = 2;
     gui.open();
 
     const weather = UI.weather;
@@ -158,6 +156,7 @@
 
     var baseSizeX = grassOptions.baseSizeX;
     var baseSizeZ = grassOptions.baseSizeZ;
+
 
     var updateBase = function(sizeX, sizeZ){
 
@@ -233,7 +232,6 @@
       }
 
       renderer.render(scene, camera);
-      //controls.update();
       requestAnimationFrame(animate);
     }
 
@@ -408,6 +406,7 @@
       trees.push(tree);
     });
 
+
     function onDocumentMouseDown(event) {
       mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
       mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
@@ -440,19 +439,6 @@
         }
       }
   }
-/*
-  //labels
-
-  /*
-  const earthDiv = document.createElement( 'div' );
-  earthDiv.className = 'label';
-  earthDiv.textContent = 'Earth';
-  earthDiv.style.backgroundColor = 'transparent'; */
-
-  //the div for the label
-
-
-
 
   document.addEventListener('mousedown', onDocumentMouseDown);
 

@@ -124,10 +124,10 @@ var addGrass = function(mainScene) {
         var posx87 = sizeX * 0.8745;
         var posz87 = sizeZ * 0.8745;
         var posx = Math.random() * posx87 - (posx87/2);
-        var posy = Math.random() * posz87 - (posz87/2);
+        var posz = Math.random() * posz87 - (posz87/2);
         //var posx = Math.random() * 125 - 65.5;
         //var posy = Math.random() * 125 - 65.5;
-        grass.position.set(posx,0.25,posy);
+        grass.position.set(posx,0.25,posz);
         grasses.push(grass);
     })
 }

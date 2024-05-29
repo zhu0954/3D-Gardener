@@ -1,7 +1,6 @@
 // Plants.js
 import * as THREE from 'three';
 import { GLTFLoader } from './jsm/loaders/GLTFLoader.js';
-import { CSS2DRenderer, CSS2DObject } from './jsm/renderers/CSS2DRenderer.js';
 
 const gltfLoader = new GLTFLoader()
 
